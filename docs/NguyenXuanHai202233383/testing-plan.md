@@ -1,54 +1,57 @@
-# Buffer Cache Testing Plan
+# Kế hoạch kiểm thử Buffer Cache
 
-Author: NguyenXuanHai202233383
+**Tác giả:** NguyenXuanHai202233383
 
-## 1. Correctness
+## 1. Kiểm thử tính đúng đắn
 
-- Read the same block repeatedly and verify the returned data.
-- Write data and read it back to verify consistency.
-- Access multiple blocks and verify that their contents do not mix.
-- Exercise cache eviction and verify that reloaded data remains correct.
+- Đọc cùng một khối nhiều lần và xác minh dữ liệu nhận được.
+- Ghi dữ liệu rồi đọc lại để kiểm tra tính nhất quán.
+- Truy cập nhiều khối khác nhau và xác minh nội dung giữa các khối không bị lẫn.
+- Kiểm tra việc loại bỏ bộ đệm và nạp lại dữ liệu, bảo đảm dữ liệu vẫn chính xác.
 
-## 2. Concurrency
+## 2. Kiểm thử truy cập đồng thời
 
-- Run multiple processes reading different blocks concurrently.
-- Run multiple processes accessing the same block.
-- Check for duplicate cache entries for the same device and block.
-- Check reference counts, lock handling, and buffer-list integrity.
-- Run available project tests and record any failures.
+- Cho nhiều tiến trình đọc các khối khác nhau cùng lúc.
+- Cho nhiều tiến trình truy cập cùng một khối.
+- Kiểm tra xem có xuất hiện nhiều mục bộ đệm cho cùng một thiết bị và số hiệu khối hay không.
+- Kiểm tra bộ đếm tham chiếu, việc sử dụng khóa và tính toàn vẹn của danh sách bộ đệm.
+- Chạy các bài kiểm thử sẵn có của dự án và ghi lại lỗi nếu có.
 
-## 3. Sequential Read-Ahead
+## 3. Kiểm thử đọc trước dữ liệu tuần tự (Read-ahead)
 
-- Read a sequence of consecutive blocks.
-- Compare behavior with read-ahead enabled and disabled, if supported.
-- Verify data correctness at the beginning and end of the sequence.
-- Check whether read-ahead reduces demand reads without excessive I/O.
+- Đọc một chuỗi các khối liên tiếp.
+- Nếu dự án hỗ trợ bật/tắt Read-ahead, so sánh hành vi trong hai trường hợp.
+- Xác minh dữ liệu ở đầu và cuối chuỗi đọc.
+- Kiểm tra Read-ahead có giảm số lần đọc theo yêu cầu hay không, đồng thời tránh phát sinh I/O dư thừa.
 
-## 4. Performance Measurements
+## 4. Đo lường hiệu năng
 
-Record the following for each test run:
+Ghi lại các thông tin sau trong mỗi lần chạy:
 
-| Metric | Result |
+| Chỉ số | Kết quả hiện tại |
 |---|---|
-| Test name | Not run yet |
-| Cache hits | Not measured yet |
-| Cache misses | Not measured yet |
-| Elapsed time | Not measured yet |
-| Correctness | Not verified yet |
+| Tên bài kiểm thử | Chưa chạy |
+| Số lần truy cập trúng bộ đệm (cache hit) | Chưa đo |
+| Số lần truy cập trượt bộ đệm (cache miss) | Chưa đo |
+| Thời gian thực hiện | Chưa đo |
+| Tính đúng đắn | Chưa xác minh |
 
-Do not report estimated values as measured results.
+Không ghi số liệu ước tính như thể đó là kết quả đo thực tế.
 
-## 5. Test Environment
+## 5. Môi trường kiểm thử
 
-Record the xv6 revision, build configuration, test command, and any
-relevant emulator settings so that the test can be reproduced.
+Ghi lại phiên bản mã nguồn xv6, cấu hình biên dịch, lệnh chạy kiểm thử và các thiết lập trình giả lập có liên quan. Những thông tin này giúp người khác có thể chạy lại và đối chiếu kết quả.
 
-## 6. Completion Checklist
+## 6. Danh sách công việc cần kiểm tra
 
-- [ ] Review the existing buffer-cache implementation.
-- [ ] Identify the available project tests.
-- [ ] Run correctness tests.
-- [ ] Run concurrency tests.
-- [ ] Evaluate sequential read-ahead.
-- [ ] Record actual results and observed issues.
-- [ ] Review findings with the project team.
+- [ ] Đọc và rà soát phần triển khai Buffer Cache hiện có.
+- [ ] Xác định các bài kiểm thử sẵn có trong dự án.
+- [ ] Chạy kiểm thử tính đúng đắn.
+- [ ] Chạy kiểm thử truy cập đồng thời.
+- [ ] Đánh giá cơ chế đọc trước dữ liệu tuần tự.
+- [ ] Ghi lại kết quả thực tế và các vấn đề phát hiện được.
+- [ ] Trao đổi, rà soát kết quả với các thành viên trong nhóm.
+
+## 7. Trạng thái kiểm thử
+
+Đây là kế hoạch kiểm thử. Chỉ đánh dấu hoàn thành các mục sau khi đã thực hiện và xác minh; hiện chưa có số liệu thực nghiệm được ghi nhận trong tài liệu này.
