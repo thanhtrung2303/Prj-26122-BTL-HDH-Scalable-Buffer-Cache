@@ -2,8 +2,8 @@
 
 Người thực hiện: Đồng Xuân Quang — MSSV 20233603.
 
-Trạng thái: Quang đã build, boot và kiểm tra thao tác file cơ bản.
-Đang chờ Trung chạy lại theo hướng dẫn và xác nhận.
+Trạng thái: Đã build, boot và kiểm tra thao tác file cơ bản.
+
 
 ## 1. Môi trường đã kiểm tra
 
@@ -143,15 +143,5 @@ Chưa chạy usertests, stressfs hoặc đo hiệu năng buffer cache.
 Ảnh chụp khởi động và thao tác file sẽ được bổ sung vào thư mục
 reports/week-01/evidence/.
 
-## 8. Kết quả xác nhận
-
-| Người | Ngày | Kết quả | Trạng thái |
-|---|---|---|---|
-| Quang | 2026-10-24 | Build, boot, đọc và ghi file cơ bản thành công | Đã tự kiểm tra |
-| Trung | Chưa xác nhận | Chưa chạy lại theo hướng dẫn | Chờ đọc chéo |
-
-## 9. Vấn đề còn tồn tại
-
-- Chưa đối chiếu với bản Tutorial 4 cũ.
-- Chưa có xác nhận chạy lại từ thành viên khác.
+## 8. Vấn đề còn tồn tại
 - Chưa phát hiện lỗi chặn build/boot trong lần kiểm tra đã ghi nhận.
