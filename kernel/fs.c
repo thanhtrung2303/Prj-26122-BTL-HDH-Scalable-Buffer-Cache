@@ -458,6 +458,34 @@ bmap(struct inode *ip, uint bn)
   panic("bmap: out of range");
 }
 
+// Look up a file block without allocating a new disk block.
+// Caller must hold ip->lock.
+static uint
+bmap_lookup(struct inode *ip, uint bn)
+{
+  uint addr;
+  uint *a;
+  struct buf *bp;
+
+  if (bn >= MAXFILE)
+    return 0;
+
+  if (bn < NDIRECT)
+    return ip->addrs[bn];
+
+  bn -= NDIRECT;
+  addr = ip->addrs[NDIRECT];
+  if (addr == 0)
+    return 0;
+
+  bp = bread(ip->dev, addr);
+  a = (uint *)bp->data;
+  addr = a[bn];
+  brelse(bp);
+
+  return addr;
+}
+
 // Truncate inode (discard contents).
 // Caller must hold ip->lock.
 void
@@ -529,6 +557,17 @@ readi(struct inode *ip, int user_dst, uint64 dst, uint off, uint n)
       break;
     }
     brelse(bp);
+
+    // Read ahead when the current block has been fully consumed.
+    if ((off + m) % BSIZE == 0 && off + m < ip->size) {
+      uint next_bn = (off + m) / BSIZE;
+      uint next_addr = bmap_lookup(ip, next_bn);
+
+      if (next_addr != 0) {
+        struct buf *rabp = bread(ip->dev, next_addr);
+        brelse(rabp);
+      }
+    }
   }
   return tot;
 }
