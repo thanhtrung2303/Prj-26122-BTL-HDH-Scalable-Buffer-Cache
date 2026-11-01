@@ -79,7 +79,7 @@ Ca hết buffer phải chạy trong harness kernel được kiểm soát: giữ 
 
 ### 2.3. Đo thống kê
 
-Trung phụ trách cache_stat và syscall theo docs/design/integration.md. Đối với số đếm chính xác, snapshot trực tiếp trong harness kernel đã cô lập, tránh nhiễu từ exec/shell. User test dùng bộ đếm tổng để phân tích có ghi rõ phạm vi toàn hệ thống.
+Trung phụ trách cache_stat và syscall theo integration.md. Đối với số đếm chính xác, snapshot trực tiếp trong harness kernel đã cô lập, tránh nhiễu từ exec/shell. User test dùng bộ đếm tổng để phân tích có ghi rõ phạm vi toàn hệ thống.
 
 ## 3. Build, boot và baseline
 
@@ -205,13 +205,3 @@ Mỗi log có SHA đầy đủ, tình trạng working tree, cấu hình B0/C0/C1
 
 Summary ghi: ID, người chạy, kết quả PASS/FAIL/TIMEOUT/CHƯA CHẠY, link log, lỗi/issue liên quan và người xử lý. Ảnh chỉ bổ sung, raw log là minh chứng chính. Lưu cả log thất bại; không xóa lỗi rồi ghi lại PASS cho cùng lượt.
 
-## 10. Cổng nghiệm thu và việc tuần 2
-
-| Cổng | Điều kiện |
-|---|---|
-| Thiết kế tuần 2 | Bốn thiết kế nhất quán với docs/design/integration.md; có ma trận này và người phụ trách |
-| Đầu ra baseline tuần 2 | Quang có môi trường/commit/log usertests + stressfs; Hải có test ghi–đọc đăng ký chạy và log B0 |
-| Đúng chức năng sau tích hợp | B01–B04, D01–D10, K01–K10, R01–R08, S01–S11 đạt trên cấu hình áp dụng, có log; không có lỗi dữ liệu/deadlock chưa xử lý |
-| Đánh giá hiệu năng | Có P01–P03 và số đo P04 nếu kết luận về contention; công bố cả overhead và giới hạn |
-
-Không yêu cầu hoàn thành toàn bộ test triển khai chỉ để coi tài liệu thiết kế tuần 2 đã đủ. Tuy nhiên, ca chưa chạy không được ghi PASS hoặc dùng làm bằng chứng kernel đã đạt yêu cầu.
