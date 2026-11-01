@@ -12,8 +12,6 @@ Bài tập lớn môn **Hệ điều hành**, học kỳ **20261**. Dự án c�
 | Nguyễn Thành Trung | 20233680 | Timestamp LRU, thống kê, tích hợp, tổng hợp báo cáo và slides |
 | Nguyễn Xuân Hải | 20233383 | Sequential read-ahead, test dữ liệu, ON/OFF và demo đọc tuần tự |
 
-Từng người viết báo cáo phần mình từ tuần 3; Trung tổng hợp. Đầu việc, người đọc chéo và mốc bàn giao nằm trong [kế hoạch chung](docs/project-plan.md). [Phân công tuần 1](docs/week-01-tasks.md) được giữ làm lịch sử.
-
 ## Mục tiêu và phạm vi
 
 - Tổ chức buffer cache thành hash bucket với khóa riêng cho từng bucket.
@@ -30,8 +28,6 @@ Từng người viết báo cáo phần mình từ tuần 3; Trung tổng hợp.
 3. Chương trình/kịch bản kiểm thử; log gốc, cấu hình chạy và bảng kết quả so sánh.
 4. Báo cáo tiến độ theo mẫu giảng viên, báo cáo cuối kỳ và slide.
 5. Kịch bản demo có thể chạy lại.
-
-Các sản phẩm chung khác cần đối chiếu thêm với phần Overview và thông báo của giảng viên.
 
 ## Cấu trúc repo
 
@@ -53,7 +49,7 @@ Các sản phẩm chung khác cần đối chiếu thêm với phần Overview v
 
 ## Lấy mã nguồn và chạy
 
-Thực hiện trong Ubuntu hoặc Ubuntu trên WSL2. VS Code dùng để đọc/sửa code; build và chạy bằng terminal Linux.
+Thực hiện trong Ubuntu. VS Code dùng để đọc/sửa code; build và chạy bằng terminal Linux.
 
 ```bash
 git clone https://github.com/thanhtrung2303/Prj-26122-BTL-HDH-Scalable-Buffer-Cache.git
@@ -111,8 +107,6 @@ git push -u origin docs/buffer-cache-notes
 
 Mở PR trên GitHub, ghi nội dung đã làm, cách kiểm tra và vấn đề còn tồn tại. Sau khi merge, mọi người cập nhật `main` bằng `git pull --ff-only origin main`.
 
-Không đưa token/mật khẩu hoặc sản phẩm build vào commit. Giữ lại `README`, `LICENSE` và lịch sử xv6 gốc. Quy tắc review là quy ước nhóm; chưa có nghĩa repo đã bật bảo vệ nhánh.
-
 ## Kiểm thử và báo cáo
 
 - Kiểm thử có sẵn chạy **bên trong shell xv6**: `usertests`, `stressfs`; lưu kết quả thực tế, không mặc định đã pass.
@@ -130,7 +124,7 @@ Không đưa token/mật khẩu hoặc sản phẩm build vào commit. Giữ l�
 
 ## Nguồn gốc và giấy phép
 
-Dự án phát triển từ [MIT xv6-riscv](https://github.com/mit-pdos/xv6-riscv). Commit được kiểm tra khi khởi tạo tài liệu: `f780d7850765d74cbdcd1fff4b822d8829f7c9bd`.
+Dự án phát triển từ [MIT xv6-riscv](https://github.com/mit-pdos/xv6-riscv).
 
 Tham khảo [README gốc](README) và [LICENSE](LICENSE). Tài liệu nhóm phải ghi rõ nội dung tham khảo và phần tự phát triển.
 
