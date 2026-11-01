@@ -2,17 +2,17 @@
 
 Bài tập lớn môn **Hệ điều hành**, học kỳ **20261**. Dự án cải tiến buffer cache trên **xv6-riscv** để giảm tranh chấp khóa và đánh giá hiệu quả đọc trước khi truy cập tuần tự.
 
-> Trạng thái: khởi tạo tài liệu và cấu trúc dự án. Các chức năng cải tiến, kết quả kiểm thử và tỷ lệ tiến độ chỉ được cập nhật khi có minh chứng. Kế hoạch thực hiện: **9 tuần**.
+> Kế hoạch thực hiện: **6 tuần tổng cộng; hiện ở tuần 2**. Các thiết kế đã được đưa vào repo; chức năng triển khai và kết quả kiểm thử chỉ được ghi hoàn thành khi có minh chứng.
 
 ## Thành viên
 
-| Thành viên | MSSV | Trách nhiệm tuần 1 |
+| Thành viên | MSSV | Trách nhiệm chính từ tuần 2 đến tuần 6 |
 |---|---|---|
-| Đồng Xuân Quang | 20233603 | Kiểm tra môi trường, hướng dẫn chạy, khảo sát tổ chức cache |
-| Nguyễn Thành Trung | 20233680 | Quản lý repo, khảo sát luồng buffer cache, tổng hợp báo cáo |
-| Nguyễn Xuân Hải | 20233383 | Phân tích yêu cầu, tìm hiểu khái niệm, Trello và kế hoạch |
+| Đồng Xuân Quang | 20233603 | Hash bucket, khóa/cấp phát buffer, baseline và kiểm tra contention |
+| Nguyễn Thành Trung | 20233680 | Timestamp LRU, thống kê, tích hợp, tổng hợp báo cáo và slides |
+| Nguyễn Xuân Hải | 20233383 | Sequential read-ahead, test dữ liệu, ON/OFF và demo đọc tuần tự |
 
-Đây là phân công tuần 1. Phân công triển khai các tuần sau được nhóm chốt theo kế hoạch và công việc thực tế.
+Từng người viết báo cáo phần mình từ tuần 3; Trung tổng hợp. Đầu việc, người đọc chéo và mốc bàn giao nằm trong [kế hoạch chung](docs/project-plan.md). [Phân công tuần 1](docs/week-01-tasks.md) được giữ làm lịch sử.
 
 ## Mục tiêu và phạm vi
 
@@ -23,7 +23,7 @@ Bài tập lớn môn **Hệ điều hành**, học kỳ **20261**. Dự án c�
 - Kiểm tra tính đúng đắn, tranh chấp khóa, thông lượng và hiệu quả read-ahead.
 - Demo contention trước/sau và tốc độ đọc tuần tự khi tắt/bật read-ahead.
 
-**Nâng cao:** write-back flusher; cấu hình dung lượng cache khi khởi động. Chỉ triển khai khi phần bắt buộc đã ổn định.
+**Phạm vi phiên bản đầu:** read-ahead đồng bộ tối đa 2 block, bật/tắt khi biên dịch. Write-back flusher, thay đổi dung lượng cache lúc boot và đọc trước bất đồng bộ nằm ngoài phạm vi 6 tuần hiện tại; nếu giảng viên bắt buộc, phải điều chỉnh kế hoạch ngay tuần 2.
 
 ## Sản phẩm bàn giao
 
@@ -79,21 +79,18 @@ Trong shell xv6, thử `ls`, `cat README`. Thoát QEMU bằng **Ctrl+A**, thả 
 
 `make clean` xóa sản phẩm build và `fs.img`, làm mất dữ liệu thử đã tạo trong ảnh đĩa. Chỉ dùng khi cần khởi tạo lại môi trường.
 
-## Kế hoạch 9 tuần
+## Kế hoạch 6 tuần
 
-| Tuần | Công việc | Mốc đầu ra |
+| Tuần | Mục tiêu | Mốc bàn giao |
 |---|---|---|
-| 1 | Môi trường, khảo sát cache, tổ chức dự án | Tài liệu khảo sát và báo cáo tiến độ |
-| 2 | Khảo sát sâu và chốt thiết kế | Bucket, quy tắc khóa, LRU, hướng read-ahead, test matrix |
-| 3 | Hash bucket và khóa từng bucket | Bản mới vượt kiểm thử cơ bản |
-| 4 | Timestamp LRU và kiểm tra đồng thời | Tái sử dụng buffer đúng, xử lý lỗi đồng bộ |
-| 5 | Hit/miss và đo ban đầu | Bộ đếm, bài test, số liệu bước đầu |
-| 6 | Tích hợp read-ahead | Đủ chức năng bắt buộc, bật/tắt được để so sánh |
-| 7 | Kiểm thử tổng thể và hiệu năng | Log, bảng so sánh và sửa lỗi |
-| 8 | Ổn định, báo cáo và slide | Bản demo và bản thảo đầy đủ |
-| 9 | Dự phòng, hoàn thiện và luyện bảo vệ | Bộ bàn giao và demo chạy lại được |
+| 1 | Môi trường và khảo sát | Tài liệu, log và báo cáo tuần 1; kiểm tra minh chứng thực tế |
+| **2 — hiện tại** | Chốt thiết kế và baseline | Hash bucket/LRU/thống kê/read-ahead nhất quán; Hải có test ghi–đọc chạy trên nền |
+| 3 | Hash bucket + timestamp LRU | Cache mới chạy đúng khi read-ahead OFF; test cơ bản, vượt cache và đồng thời |
+| 4 | Read-ahead + thống kê | Bản đủ chức năng, ON/OFF và xem/reset; hoàn tất tích hợp trước cuối tuần |
+| 5 | Regression và đo đạc | Sửa lỗi, log kiểm thử, so sánh nền/cache mới và ON/OFF; nháp báo cáo |
+| 6 | Ổn định và bàn giao | Đầu tuần chốt chức năng; báo cáo, slides, demo và tập bảo vệ |
 
-Chi tiết: [kế hoạch](docs/project-plan.md), [phân công tuần 1](docs/week-01-tasks.md).
+Chi tiết từng người: [project-plan.md](docs/project-plan.md). Hợp đồng kỹ thuật: [integration.md](docs/design/integration.md). Ca kiểm thử và minh chứng: [test_plan.md](tests/test_plan.md).
 
 ## Quy trình đóng góp
 
@@ -139,3 +136,4 @@ Không đưa token/mật khẩu hoặc sản phẩm build vào commit. Giữ l�
 Dự án phát triển từ [MIT xv6-riscv](https://github.com/mit-pdos/xv6-riscv). Commit được kiểm tra khi khởi tạo tài liệu: `f780d7850765d74cbdcd1fff4b822d8829f7c9bd`.
 
 Tham khảo [README gốc](README) và [LICENSE](LICENSE). Tài liệu nhóm phải ghi rõ nội dung tham khảo và phần tự phát triển.
+

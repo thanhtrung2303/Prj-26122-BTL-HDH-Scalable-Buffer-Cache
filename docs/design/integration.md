@@ -16,9 +16,9 @@ Tài liệu này chốt phần giao tiếp giữa bốn thiết kế, không tha
 | `read-ahead.md` | Hải: phát hiện tuần tự, ánh xạ không cấp phát và đọc trước |
 | `../../tests/test_plan.md` | Cả nhóm: kiểm thử tích hợp và nghiệm thu |
 
-Tên trên là tên đích khi đưa vào repo. Trước khi merge, thống nhất cách viết dấu gạch dưới/gạch nối và cập nhật liên kết tương ứng; không giữ hai bản khác nội dung của cùng một đặc tả.
+Tên trên là tên dùng trong repo; read-ahead.md thuộc bàn giao của Hải. Kế hoạch và phân công hiện hành: [project-plan.md](../project-plan.md), tổng cộng 6 tuần, hiện tuần 2.
 
-Nếu tài liệu hash bucket cũ còn ghi “chờ thống nhất”, dùng quyết định ở đây để cập nhật phần đó. Đây là hợp đồng được soạn cho nhóm đọc chéo, không phải bằng chứng mọi thành viên đã xác nhận.
+Các quyết định nguồn yêu cầu, timestamp, thứ tự khóa, hit/miss và hết buffer đã được chốt đồng bộ trong [hash-bucket.md](hash-bucket.md). Đây là đặc tả triển khai, không phải xác nhận mã hoặc kiểm thử đã hoàn thành.
 
 Phiên bản đầu đọc trước đồng bộ tối đa 2 block; không có worker hoặc hàng đợi I/O nền. Hiệu quả và contention phải được đo sau triển khai.
 
@@ -231,11 +231,11 @@ Chốt READ_AHEAD_ENABLED và READ_AHEAD_BLOCKS=2 trong param.h. OFF không gọ
 | kernel/defs.h, param.h, Makefile | Người phụ trách thay đổi tương ứng | Trung | Khai báo, cấu hình, UPROGS, tránh ghi đè thay đổi chung |
 | Test correctness và baseline | Hải, Quang | Trung | Theo tests/test_plan.md |
 
-bio.c là file dùng chung: Quang tích hợp cấu trúc/đường cấp phát trước; Trung tích hợp LRU/thống kê trên cùng nền. Hải gọi API đã chốt, không tự viết một phiên bản hash cache khác. Đây là phân công đề nghị cho giai đoạn triển khai, cần nhóm xác nhận khi nhận việc.
+bio.c là file dùng chung: Quang tích hợp cấu trúc/đường cấp phát trước; Trung tích hợp LRU/thống kê trên cùng nền. Hải gọi API đã chốt, không tự viết một phiên bản hash cache khác. Phân công này áp dụng cho kế hoạch 6 tuần: tuần 3 cache + LRU, tuần 4 read-ahead + thống kê, tuần 5 kiểm thử/đo đạc, tuần 6 ổn định và bàn giao.
 
 ## 7. Thứ tự triển khai và cổng nghiệm thu
 
-1. Cập nhật hash-bucket.md để phản ánh cấu trúc/tên và quyết định nguồn, timestamp, hết buffer ở đây.
+1. Tuần 2: đọc chéo bộ thiết kế đã chốt; Hải hoàn thiện tài liệu read-ahead và test baseline.
 2. Lưu baseline: commit, môi trường, CPU, log usertests/stressfs và test ghi–đọc.
 3. Tích hợp hash bucket + timestamp LRU; chạy correctness khi read-ahead OFF.
 4. Tích hợp nguồn yêu cầu, thống kê và snapshot/reset; kiểm thử đếm và khóa.
@@ -243,3 +243,4 @@ bio.c là file dùng chung: Quang tích hợp cấu trúc/đường cấp phát 
 6. Chạy toàn bộ ma trận, so sánh ON/OFF và ghi số đo. Sửa lỗi correctness trước khi đánh giá hiệu năng.
 
 Điều kiện nghiệm thu thiết kế: không còn giao diện mâu thuẫn, mọi chức năng có người phụ trách và ca kiểm thử. Điều kiện nghiệm thu implementation: có mã chạy, log đúng commit và các ca bắt buộc đạt; không dùng độ hoàn chỉnh của tài liệu làm bằng chứng code đã đúng.
+
