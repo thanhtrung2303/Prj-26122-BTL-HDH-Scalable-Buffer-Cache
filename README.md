@@ -23,8 +23,6 @@ Từng người viết báo cáo phần mình từ tuần 3; Trung tổng hợp.
 - Kiểm tra tính đúng đắn, tranh chấp khóa, thông lượng và hiệu quả read-ahead.
 - Demo contention trước/sau và tốc độ đọc tuần tự khi tắt/bật read-ahead.
 
-**Phạm vi phiên bản đầu:** read-ahead đồng bộ tối đa 2 block, bật/tắt khi biên dịch. Write-back flusher, thay đổi dung lượng cache lúc boot và đọc trước bất đồng bộ nằm ngoài phạm vi 6 tuần hiện tại; nếu giảng viên bắt buộc, phải điều chỉnh kế hoạch ngay tuần 2.
-
 ## Sản phẩm bàn giao
 
 1. Mã nguồn xv6 đã cải tiến, trọng tâm là `kernel/bio.c` và các file liên quan.
@@ -84,7 +82,7 @@ Trong shell xv6, thử `ls`, `cat README`. Thoát QEMU bằng **Ctrl+A**, thả 
 | Tuần | Mục tiêu | Mốc bàn giao |
 |---|---|---|
 | 1 | Môi trường và khảo sát | Tài liệu, log và báo cáo tuần 1; kiểm tra minh chứng thực tế |
-| **2 — hiện tại** | Chốt thiết kế và baseline | Hash bucket/LRU/thống kê/read-ahead nhất quán; Hải có test ghi–đọc chạy trên nền |
+| 2 | Chốt thiết kế và baseline | Hash bucket/LRU/thống kê/read-ahead nhất quán; Hải có test ghi–đọc chạy trên nền |
 | 3 | Hash bucket + timestamp LRU | Cache mới chạy đúng khi read-ahead OFF; test cơ bản, vượt cache và đồng thời |
 | 4 | Read-ahead + thống kê | Bản đủ chức năng, ON/OFF và xem/reset; hoàn tất tích hợp trước cuối tuần |
 | 5 | Regression và đo đạc | Sửa lỗi, log kiểm thử, so sánh nền/cache mới và ON/OFF; nháp báo cáo |
@@ -126,9 +124,8 @@ Không đưa token/mật khẩu hoặc sản phẩm build vào commit. Giữ l�
 
 ## Liên kết nhóm
 
-- Trello: **Chưa bổ sung — Hải cập nhật.**
-- Figma/FigJam: **Chưa bổ sung — nhóm tạo và cập nhật.**
-- Báo cáo tuần 1: [khung báo cáo](reports/week-01/README.md).
+- Trello: https://trello.com/b/rMe3J4Uu/project-26122-buffer-cache-xv6
+- Figma/FigJam: https://www.figma.com/board/XfyWpGJ6HHEUFiIF6UFkwP/Project-26122-%E2%80%94-Lu%E1%BB%93ng-%C4%91%E1%BB%8Dc-buffer-cache-xv6?node-id=12-133&t=6CLENMT9h0baHPKa-0
 - [Nguồn tham khảo](docs/references.md).
 
 ## Nguồn gốc và giấy phép
