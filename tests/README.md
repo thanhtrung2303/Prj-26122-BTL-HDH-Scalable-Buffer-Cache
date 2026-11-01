@@ -1,21 +1,16 @@
-# Kế hoạch kiểm thử
+# Kiểm thử buffer cache
 
-Trạng thái: khung kiểm thử, chưa có test riêng của dự án được triển khai.
+Kế hoạch chi tiết hiện hành: [test_plan.md](test_plan.md), gồm ca dữ liệu, hash bucket/LRU, đọc trước, thống kê và đo hiệu năng. Các lệnh test mới trong kế hoạch là giao diện cần triển khai; không coi là đã có mã hoặc PASS.
 
-## Test matrix dự kiến
-| Mã | Tình huống | Mục tiêu |
+## Phân công và mốc trong kế hoạch 6 tuần
+
+| Người chính | Phần kiểm thử | Mốc |
 |---|---|---|
-| T01 | Build/boot và usertests | Hồi quy chức năng có sẵn |
-| T02 | Nhiều tiến trình truy cập cùng block | Dữ liệu đúng, không trùng buffer |
-| T03 | Nhiều tiến trình truy cập block khác nhau | Đánh giá contention |
-| T04 | Nhiều block hơn dung lượng cache | Kiểm tra thay thế và LRU |
-| T05 | Đọc tuần tự bật/tắt read-ahead | Đánh giá thời gian/thông lượng |
-| T06 | Đọc ngẫu nhiên bật/tắt read-ahead | Đánh giá tác dụng phụ |
-| T07 | Đọc/ghi phối hợp, pin/unpin | Hồi quy, dữ liệu đúng |
-| T08 | Tình huống hit/miss có kiểm soát | Kiểm tra định nghĩa/bộ đếm |
+| Quang | Baseline usertests/stressfs; hash bucket, chống trùng, hết buffer; regression và contention | Baseline tuần 2; cache tuần 3; regression/đo tuần 5 |
+| Trung | LRU, pin/unpin, bộ đếm, snapshot/reset và tổng hợp số liệu | LRU tuần 3; thống kê tuần 4; kiểm tra/đo tuần 5 |
+| Hải | Test ghi–đọc, repeat/capacity/concurrent; read-ahead/EOF/indirect/shared file; ON/OFF | Test đầu tiên + log B0 tuần 2; test cache tuần 3; read-ahead tuần 4–5 |
+| Cả nhóm | Build/boot trên máy từng người, kiểm tra bản bàn giao và tập demo | Tuần 2 và regression theo thay đổi; demo tuần 6 |
 
-Mỗi test bổ sung: chủ sở hữu, dữ liệu đầu vào, lệnh chạy, kết quả mong đợi, kết quả thực tế, commit và link log.
-Không mặc định repo có bcachetest hoặc các bài lab khác; kiểm tra trước khi dùng.
+Các ID và cổng ưu tiên theo [project-plan.md](../docs/project-plan.md#6-kiểm-thử-ưu-tiên-và-mốc-nghiệm-thu). 47 ca có thể dùng chung chương trình/hook; không cần viết 47 chương trình riêng. Không bỏ test correctness chỉ để kịp hạn; ghi rõ ca chưa chạy/chưa đạt.
 
-Chương trình C chạy trong xv6 đặt ở user/ và thêm UPROGS trong Makefile.
-Script điều khiển từ host đặt ở scripts/.
+Chương trình C chạy trong xv6 đặt ở user/ và đăng ký UPROGS. Script host đặt ở scripts/. Không mặc định có bcachetest hoặc test hook khi chưa kiểm tra mã. Mỗi log ghi SHA, môi trường, CPU, cache/config ON/OFF, dữ liệu và kết quả; log thất bại cũng được lưu.

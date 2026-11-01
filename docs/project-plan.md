@@ -1,131 +1,77 @@
-# Kế hoạch dự án 9 tuần — Scalable Buffer Cache
+# Kế hoạch dự án 6 tuần — Scalable Buffer Cache
 
-> **Trạng thái:** Kế hoạch dự kiến. Nhóm cần xác nhận ngày bắt đầu, hạn cụ thể và phân công cuối cùng. Không xem đầu việc là hoàn thành nếu chưa có minh chứng.
+> Tổng thời gian: **6 tuần**, hiện tại là **tuần 2**. Hoàn tất tích hợp chức năng cuối tuần 4, kiểm thử/đo đạc tuần 5, bàn giao tuần 6. Mốc dưới đây là hạn thực hiện, không phải xác nhận công việc đã hoàn thành.
 
-## 1. Mục tiêu và nguyên tắc
+## 1. Phạm vi và nguyên tắc
 
-- Hoàn thành các chức năng bắt buộc **trước hoặc vào cuối tuần 6**.
-- Mỗi đầu việc phải có người phụ trách, hạn, checklist, tiêu chí hoàn thành và liên kết minh chứng.
-- Chỉ chuyển thẻ sang **Hoàn thành** khi tiêu chí đạt và có link tới commit, PR, kết quả kiểm thử hoặc tài liệu.
-- Những tính năng mở rộng không bắt buộc được giữ trong **Backlog** cho đến khi nhóm xác nhận phạm vi.
+- Chức năng: hash bucket có khóa riêng, timestamp LRU bằng lru_clock, thống kê demand/read-ahead và đọc trước tuần tự đồng bộ tối đa 2 block.
+- Read-ahead bật/tắt bằng cấu hình biên dịch; không thêm cơ chế bất đồng bộ, flusher hoặc cache resize trong phạm vi hiện tại. Nếu giảng viên yêu cầu khác, điều chỉnh phạm vi ngay tuần 2.
+- Còn tuần 2 để chốt thiết kế và bốn tuần tiếp theo để triển khai/bàn giao. Không giữ công việc bắt buộc đến tuần 7–9.
+- Mỗi việc có một người chính, người đọc chéo, hạn và minh chứng. Người chính tự sửa lỗi phần mình; Trung tích hợp bản chung.
+- Báo cáo viết dần từ tuần 3. Đầu tuần 6 chốt chức năng, chỉ sửa lỗi và hoàn thiện bàn giao.
 
-## 2. Các cột Trello
+## 2. Trách nhiệm xuyên suốt
 
-1. **Backlog** — việc chưa được chọn làm trong tuần hiện tại, gồm tính năng tương lai và cải tiến tùy chọn.
-2. **Tuần này** — việc nhóm cam kết thực hiện trong tuần.
-3. **Đang làm** — việc đã bắt đầu; thẻ phải có người phụ trách.
-4. **Chờ kiểm tra** — đã có đầu ra, đang chờ người khác đọc chéo hoặc chạy kiểm thử.
-5. **Hoàn thành** — đã đạt điều kiện hoàn thành và gắn minh chứng.
+| Thành viên | Trách nhiệm chính | Người đọc chéo |
+|---|---|---|
+| Đồng Xuân Quang — 20233603 | Cấu trúc hash cache, khóa, cấp phát/chuyển buffer, chống trùng, hết buffer; baseline và contention | Trung |
+| Nguyễn Thành Trung — 20233680 | Timestamp LRU, pin/unpin, thống kê, snapshot/reset, tích hợp; tổng hợp báo cáo/slides | Quang kiểm tra LRU/khóa; Hải kiểm tra thống kê |
+| Nguyễn Xuân Hải — 20233383 | Sequential read-ahead, trạng thái file, ánh xạ không cấp phát, ON/OFF; test dữ liệu và demo | Trung; Quang kiểm tra tương tác cache |
 
-Mỗi thẻ cần có:
-- **Người phụ trách:** một người chịu trách nhiệm chính; người hỗ trợ ghi trong mô tả.
-- **Hạn hoàn thành:** ngày cụ thể do nhóm thống nhất; nếu chưa chốt, ghi “chưa chốt” và xác nhận ở buổi họp.
-- **Checklist:** các bước nhỏ có thể kiểm tra được.
-- **Điều kiện hoàn thành:** kết quả quan sát/kiểm chứng được, không chỉ là “đã làm”.
-- **Minh chứng:** link tài liệu, commit, PR, lệnh kiểm thử hoặc log kết quả.
+Hải cập nhật board/Trello nếu nhóm dùng; mỗi người cập nhật thẻ của mình. Không mặc định đã có board hoặc thao tác ngoài GitHub đã được thực hiện.
 
-## 3. Kế hoạch 9 tuần
+## 3. Mốc công việc từng tuần
 
-| Tuần | Mục tiêu và công việc | Người phụ trách dự kiến | Đầu ra / điều kiện đạt |
+| Tuần | Quang | Trung | Hải | Đầu ra chung |
+|---|---|---|---|---|
+| 1 — lịch sử | Môi trường, tổ chức cache gốc | Repo, luồng xử lý và báo cáo | Yêu cầu và kế hoạch kiểm thử ban đầu | Giữ minh chứng và phân công cũ; không tự đánh dấu hoàn thành |
+| 2 — hiện tại | Chốt hash-bucket.md theo giao diện chung; hoàn thiện baseline usertests/stressfs | Chốt LRU, thống kê, integration và test plan; tổng hợp tuần 2 | Hoàn thiện thiết kế read-ahead, test ghi–đọc so sánh nội dung + UPROGS + log baseline | Thiết kế nhất quán, baseline có minh chứng, test đầu tiên chạy được |
+| 3 | Triển khai hash bucket, recheck miss, chuyển buffer, cấp phát tùy chọn | Triển khai lru_clock, chọn nạn nhân, brelse/bunpin; tích hợp với Quang | Test repeat/capacity/concurrent; trạng thái tuần tự và ánh xạ không cấp phát | Hash bucket + LRU chạy đúng khi read-ahead OFF |
+| 4 | Kiểm tra tranh chấp, chống trùng, hết buffer; sửa cấp phát | Hoàn thiện nguồn yêu cầu, bộ đếm, syscall, cache_stat và tích hợp | Hoàn thiện đọc trước 2 block, ON/OFF, EOF/indirect, shared file | Bản đủ chức năng cuối tuần; có dữ liệu đo thống kê |
+| 5 | Regression, khóa, so sánh baseline/cache mới | Kiểm tra LRU/thống kê, tổng hợp số liệu, sửa tích hợp và nháp báo cáo | Kiểm thử dữ liệu/read-ahead, ON/OFF, tình huống biên và sửa lỗi | Bản ổn định, log đúng SHA, bảng số liệu và báo cáo nháp |
+| 6 | Viết/hoàn thiện phần hash bucket và đồng bộ; giải thích khóa khi bảo vệ | Chốt báo cáo/slides, bản bàn giao, kịch bản demo và tổng hợp đóng góp | Hoàn thiện phần read-ahead/test; chuẩn bị dữ liệu và chạy demo | Chốt chức năng đầu tuần; sửa lỗi cuối, tập bảo vệ, bàn giao trước cuối tuần |
+
+## 4. Việc phải bàn giao trong tuần 2
+
+| Người chính | Công việc | Đầu ra và điều kiện đạt | Người đọc chéo |
 |---|---|---|---|
-| 1 | Xác nhận môi trường và repo; khảo sát yêu cầu; tạo Trello; lập kế hoạch | Quang: môi trường; Trung và Hải: khảo sát, yêu cầu; cả nhóm: Trello | Hướng dẫn môi trường; tài liệu yêu cầu; board có cột, thẻ và chủ sở hữu; kế hoạch được nhóm xem xét |
-| 2 | Chốt thiết kế, quy tắc khóa và ma trận kiểm thử; đọc chéo tài liệu | Cả nhóm; Trung tổng hợp báo cáo | Thiết kế được review; rủi ro đồng bộ và các ca kiểm thử được ghi lại |
-| 3 | Triển khai/phối hợp hash bucket và khóa theo bucket | Quang phụ trách chính; nhóm review | Build được; test cơ bản chạy; không tạo bộ đệm trùng trong các trường hợp đã kiểm tra |
-| 4 | Triển khai/kiểm tra timestamp LRU và xử lý truy cập đồng thời | Trung phụ trách chính; Quang hỗ trợ đồng bộ | Quy tắc chọn nạn nhân được kiểm tra; kiểm thử truy cập đồng thời được chạy và ghi kết quả |
-| 5 | Bộ đếm hit/miss, thu thập số liệu nền và hoàn thiện chương trình kiểm thử | Trung: thống kê/tích hợp; Hải: test và tổng hợp số liệu | Định nghĩa chỉ số rõ ràng; có lệnh chạy và log/số liệu thực tế, hoặc ghi rõ vấn đề còn tồn tại |
-| 6 | Hoàn thiện Read-ahead và tích hợp các chức năng bắt buộc | Hải phụ trách Read-ahead/test theo phân công dự kiến; cả nhóm tích hợp | **Mốc chức năng bắt buộc:** build/boot được; các test đúng đắn và tích hợp đã chạy; Read-ahead được kiểm tra; lỗi còn lại được ghi rõ |
-| 7 | Kiểm thử tổng thể, đo và so sánh hiệu năng, sửa lỗi ưu tiên | Cả nhóm; Hải tổng hợp số liệu | Có kết quả đo thực tế, mô tả môi trường và phân tích; không dùng số liệu ước lượng thay số liệu đo |
-| 8 | Hoàn thiện báo cáo, slide, kịch bản demo và ổn định mã nguồn | Trung tổng hợp báo cáo; từng thành viên viết phần mình | Bản báo cáo/slide được đọc chéo; demo có các bước tái hiện |
-| 9 | Dự phòng, sửa lỗi cuối, luyện bảo vệ và bàn giao | Cả nhóm | Có thể tái hiện build/test/demo; tài liệu, link và đóng góp được xác nhận |
+| Quang | Chốt thiết kế hash bucket | Cấu trúc/head/hnext, thứ tự khóa, LRU, nguồn yêu cầu, hit khi recheck, demand panic/RA return 0; nhất quán integration | Trung |
+| Quang | Baseline | SHA, môi trường, số CPU, log usertests và stressfs; ghi đúng kết quả/lỗi | Hải |
+| Trung | Thiết kế LRU và thống kê | Hai đặc tả có khóa, vị trí cập nhật, giao diện và ví dụ; không còn giao diện mâu thuẫn | Quang/Hải theo chuyên môn |
+| Trung | Tổng hợp thiết kế/báo cáo | integration.md, kế hoạch 6 tuần, sơ đồ hoặc luồng xử lý, link minh chứng và TODO có chủ sở hữu | Cả nhóm |
+| Hải | Chốt read-ahead | Phát hiện tuần tự, nơi lưu/khóa trạng thái, readi_ra/bread_ra, ánh xạ, I/O đồng bộ, ON/OFF, thiếu buffer/EOF | Trung |
+| Hải | Test ghi–đọc đầu tiên | Source trong user/, đăng ký UPROGS, kiểm tra từng byte và số byte, log chạy trên B0 | Quang |
+| Cả nhóm | Review thiết kế và môi trường | Góp ý được xử lý/ghi TODO; build/boot trên máy từng người có log | Trung tổng hợp |
 
-**Lưu ý:** Phân công từ tuần 3 trở đi là phương án dự kiến theo kế hoạch hiện có, cần nhóm xác nhận trước khi coi là phân công chính thức. Nếu chức năng bắt buộc còn lỗi ở tuần 6, ưu tiên sửa lỗi và hoãn tính năng mở rộng.
+Mã thử nghiệm sẵn có trong PR của Hải phải đối chiếu hợp đồng trước khi tích hợp. Không dùng số dòng code hoặc mô tả PR thay cho test/log.
 
-## 4. Các thẻ cần tạo/cập nhật trên Trello
+## 5. Phối hợp sửa file và bàn giao giữa tuần
 
-Ngày cụ thể chưa được cung cấp; vì vậy dùng hạn tương đối **cuối tuần tương ứng** cho đến khi nhóm thống nhất ngày bắt đầu. Hãy thay bằng ngày thực tế trên Trello.
+- Quang chủ trì cấu trúc/đường cấp phát trong bio.c và buf.h; bàn giao giao diện cache chung trước để Trung tích hợp LRU/thống kê.
+- Trung triển khai LRU/thống kê trên cùng nền hash cache; không giữ một phiên bản cấp phát khác.
+- Hải chủ trì file.h/file.c/fs.c và test user; gọi API chung, không viết lại hash cache.
+- defs.h/param.h/Makefile: người thêm chức năng chịu trách nhiệm phần khai báo/đăng ký; Trung kiểm tra trước khi tích hợp.
+- Đầu tuần xác định thẻ và điều kiện đạt; giữa tuần bàn giao PR chạy được cho phần phụ thuộc; cuối tuần đọc chéo, lưu log và tổng hợp báo cáo. Hạn cụ thể trên lịch được nhóm điền theo lịch môn học, không tự suy ra ngày từ số tuần.
+- Mỗi thay đổi có PR nhỏ, hướng dẫn kiểm tra và link log; không chờ tới cuối tuần 4 mới ghép ba phần lần đầu.
 
-### Thẻ A — Xác nhận môi trường và hướng dẫn chạy
-- **Danh sách:** Tuần này (tuần 1)
-- **Phụ trách:** Quang
-- **Hạn:** Cuối tuần 1 — ngày cụ thể chưa chốt
-- **Checklist:** [ ] ghi phiên bản/revision; [ ] ghi công cụ và phụ thuộc; [ ] ghi lệnh build/run; [ ] xác minh thành viên khác có thể làm theo.
-- **Điều kiện hoàn thành:** hướng dẫn chạy được kiểm chứng trên môi trường nhóm và có link tài liệu/log.
-- **Minh chứng:** link hướng dẫn môi trường hoặc commit tài liệu.
+## 6. Kiểm thử ưu tiên và mốc nghiệm thu
 
-### Thẻ B — Khảo sát yêu cầu và luồng xử lý cache
-- **Danh sách:** Tuần này (tuần 1)
-- **Phụ trách:** Trung và Hải
-- **Hạn:** Cuối tuần 1 — ngày cụ thể chưa chốt
-- **Checklist:** [ ] tóm tắt yêu cầu bắt buộc; [ ] mô tả luồng lấy/nhả buffer; [ ] xác định rủi ro đồng bộ; [ ] ghi câu hỏi chưa rõ; [ ] đọc chéo.
-- **Điều kiện hoàn thành:** tài liệu được Trung và Hải đọc chéo, các điểm chưa rõ được ghi lại.
-- **Minh chứng:** [Tài liệu phân tích của Hải](NguyenXuanHai202233383/buffer-cache-analysis.md), [kế hoạch kiểm thử](NguyenXuanHai202233383/testing-plan.md).
+Danh mục chi tiết: [test_plan.md](../tests/test_plan.md). 47 ca là danh mục kiểm tra; nhiều ca dùng chung một chương trình/hook, không phải 47 chương trình độc lập.
 
-### Thẻ C — Tạo board Trello và kế hoạch 9 tuần
-- **Danh sách:** Tuần này (tuần 1)
-- **Phụ trách:** Hải (đầu mối dự kiến); cả nhóm xác nhận
-- **Hạn:** Cuối tuần 1 — ngày cụ thể chưa chốt
-- **Checklist:** [ ] tạo 5 danh sách; [ ] tạo thẻ tuần 1; [ ] thêm người phụ trách/hạn/checklist/tiêu chí; [ ] đưa việc tương lai vào Backlog; [ ] gắn link tài liệu và PR; [ ] chia sẻ board cho nhóm.
-- **Điều kiện hoàn thành:** thành viên có quyền xem board và nhìn từng thẻ biết ai làm gì, hạn nào, đầu ra ở đâu.
-- **Minh chứng:** board Trello của nhóm và file kế hoạch này.
+| Mốc | Ca ưu tiên | Điều kiện |
+|---|---|---|
+| Tuần 2 | B01–B04 trên B0 theo phạm vi từng người | Baseline và test ghi–đọc có log; không yêu cầu mọi test sau tích hợp chạy ngay |
+| Tuần 3 | B01–B04, D01–D03, K01–K07, K09 trên C0 | Dữ liệu đúng, không trùng buffer, không thu hồi buffer đang giữ/pin; LRU đúng |
+| Tuần 4 | D04–D10, R01–R08, S01–S11; lặp regression C0/C1 | Đọc trước/thống kê tích hợp, ON/OFF đúng, không lỗi EOF/indirect hoặc refcnt |
+| Tuần 5 | Chạy toàn bộ nhóm chức năng B/D/K/R/S, gồm K08/K10; P01–P04 | Có log; lỗi phải sửa hoặc ghi chưa đạt; đo contention trước khi kết luận giảm contention |
+| Tuần 6 | Chạy lại regression/ca bị ảnh hưởng bởi sửa lỗi và rehearsal demo | Bản bàn giao có thể tái hiện; không tự ghi PASS cho ca chưa chạy |
 
-### Thẻ D — Đọc chéo tài liệu luồng xử lý của Trung
-- **Danh sách:** Tuần này (tuần 1)
-- **Phụ trách:** Hải
-- **Hạn:** Thứ Bảy tuần 1 — ngày cụ thể chưa chốt
-- **Checklist:** [ ] đọc tài liệu luồng xử lý; [ ] đối chiếu với yêu cầu; [ ] ghi chỗ thiếu/mâu thuẫn; [ ] gửi góp ý cho Trung; [ ] xác nhận đã xử lý hoặc ghi TODO.
-- **Điều kiện hoàn thành:** có góp ý cụ thể và trạng thái xử lý; không chỉ ghi “đã đọc”.
-- **Minh chứng:** link tài liệu/PR của Trung và comment hoặc ghi chú review.
+Không giảm tiêu chí đúng dữ liệu/deadlock để kịp hạn. Nếu chậm: dừng mở rộng, dùng chung test/hook và ưu tiên sửa lỗi; báo rõ mục tiêu nào chưa đạt. Hiệu năng không có ngưỡng phần trăm tự đặt sau khi đo; báo cả khi RA đồng bộ không tăng tốc.
 
-### Thẻ E — Đọc chéo checklist yêu cầu và kế hoạch của Hải
-- **Danh sách:** Tuần này (tuần 1)
-- **Phụ trách:** Quang
-- **Hạn:** Thứ Bảy tuần 1 — ngày cụ thể chưa chốt
-- **Checklist:** [ ] kiểm tra checklist yêu cầu; [ ] kiểm tra tính khả thi của kế hoạch; [ ] đánh dấu điểm thiếu; [ ] gửi góp ý; [ ] xác nhận TODO.
-- **Điều kiện hoàn thành:** checklist và kế hoạch có phản hồi review được ghi nhận.
-- **Minh chứng:** [Kế hoạch kiểm thử](NguyenXuanHai202233383/testing-plan.md), [kế hoạch 9 tuần](project-plan.md).
+## 7. Theo dõi công việc và minh chứng
 
-### Thẻ F — Bàn giao bản nháp và tổng hợp báo cáo tuần
-- **Danh sách:** Tuần này (tuần 1)
-- **Phụ trách:** Trung tổng hợp; Quang và Hải bàn giao phần mình
-- **Hạn:** Thứ Bảy tuần 1 — ngày cụ thể chưa chốt
-- **Checklist:** [ ] từng người cập nhật trạng thái; [ ] gắn link đầu ra; [ ] ghi vấn đề/TODO; [ ] đọc chéo; [ ] Trung tổng hợp báo cáo.
-- **Điều kiện hoàn thành:** báo cáo phản ánh đúng công việc đã làm, phần chưa làm và liên kết minh chứng.
-- **Minh chứng:** báo cáo nhóm, các PR và board Trello.
+Board dùng các trạng thái: Backlog → Tuần này → Đang làm → Chờ kiểm tra → Hoàn thành. Mỗi thẻ có người chính, người đọc chéo, hạn cuối tuần tương ứng, checklist, điều kiện đạt và link PR/log.
 
-### Thẻ G — Chốt tiến độ và kiểm tra quyền truy cập
-- **Danh sách:** Tuần này (tuần 1)
-- **Phụ trách:** Cả nhóm
-- **Hạn:** Trước hạn nộp tuần 1 — ngày cụ thể chưa chốt
-- **Checklist:** [ ] họp ngắn; [ ] kiểm tra link mở được; [ ] kiểm tra quyền xem; [ ] xác nhận đóng góp; [ ] chốt TODO và mốc tuần 2.
-- **Điều kiện hoàn thành:** mọi đầu ra có thể truy cập bởi nhóm/giảng viên theo yêu cầu; TODO có người phụ trách.
-- **Minh chứng:** link board, repo, PR và báo cáo.
+Chỉ hoàn thành khi người đọc chéo xác nhận và có minh chứng. Thất bại/treo phải lưu log và việc sửa; không xóa log lỗi để thay bằng kết quả PASS. Báo cáo mỗi tuần ghi đóng góp, phần chưa xong và việc tuần sau có chủ sở hữu.
 
-## 5. Việc chung và lịch bàn giao tuần 1
-
-| Thời điểm | Việc cần làm |
-|---|---|
-| Thứ Năm–Thứ Sáu | Quang xác nhận môi trường; Trung và Hải viết tài liệu khảo sát/yêu cầu; tạo và cập nhật Trello |
-| Thứ Bảy | Bàn giao bản nháp, đọc chéo, sửa điểm thiếu; Trung tổng hợp báo cáo |
-| Trước hạn nộp | Họp ngắn chốt tiến độ; kiểm tra link/quyền xem; xác nhận đóng góp và TODO |
-
-### Phân công đọc chéo
-- **Trung** kiểm tra hướng dẫn chạy và ghi chú tổ chức cache của Quang.
-- **Hải** kiểm tra tài liệu luồng xử lý của Trung.
-- **Quang** kiểm tra checklist yêu cầu và kế hoạch của Hải.
-
-## 6. Quy tắc chuyển trạng thái trên Trello
-
-- **Backlog → Tuần này:** nhóm thống nhất ưu tiên và có người phụ trách.
-- **Tuần này → Đang làm:** người phụ trách đã bắt đầu và cập nhật checklist.
-- **Đang làm → Chờ kiểm tra:** có đầu ra xem được và hướng dẫn kiểm tra.
-- **Chờ kiểm tra → Hoàn thành:** người review xác nhận đạt tiêu chí và minh chứng hoạt động.
-- Nếu không đạt, chuyển lại **Đang làm** và ghi rõ việc cần sửa.
-
-## 7. Liên kết đầu ra của Hải
-
-- [README đóng góp cá nhân](NguyenXuanHai202233383/README.md)
-- [Phân tích thiết kế Buffer Cache](NguyenXuanHai202233383/buffer-cache-analysis.md)
-- [Kế hoạch kiểm thử](NguyenXuanHai202233383/testing-plan.md)
-- [Pull Request #3](https://github.com/thanhtrung2303/Prj-26122-BTL-HDH-Scalable-Buffer-Cache/pull/3)
-
-Các tài liệu trên là đầu ra tài liệu. Không xem chúng là bằng chứng cho việc triển khai code hoặc kiểm thử thành công nếu chưa có minh chứng tương ứng.
+Phân công tuần 1 được lưu tại [week-01-tasks.md](week-01-tasks.md). Các tài liệu khảo sát tuần 1 là nguồn lịch sử; kế hoạch hiện hành là file này và [integration.md](design/integration.md).
