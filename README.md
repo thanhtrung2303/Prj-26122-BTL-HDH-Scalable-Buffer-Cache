@@ -6,7 +6,7 @@ Bài tập lớn môn **Hệ điều hành**, học kỳ **20261**. Dự án c�
 
 ## Thành viên
 
-| Thành viên | MSSV | Trách nhiệm chính từ tuần 2 đến tuần 6 |
+| Thành viên | MSSV | Nhiệm vụ |
 |---|---|---|
 | Đồng Xuân Quang | 20233603 | Hash bucket, khóa/cấp phát buffer, baseline và kiểm tra contention |
 | Nguyễn Thành Trung | 20233680 | Timestamp LRU, thống kê, tích hợp, tổng hợp báo cáo và slides |
