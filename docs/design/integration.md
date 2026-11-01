@@ -231,16 +231,16 @@ Chốt READ_AHEAD_ENABLED và READ_AHEAD_BLOCKS=2 trong param.h. OFF không gọ
 | kernel/defs.h, param.h, Makefile | Người phụ trách thay đổi tương ứng | Trung | Khai báo, cấu hình, UPROGS, tránh ghi đè thay đổi chung |
 | Test correctness và baseline | Hải, Quang | Trung | Theo tests/test_plan.md |
 
-bio.c là file dùng chung: Quang tích hợp cấu trúc/đường cấp phát trước; Trung tích hợp LRU/thống kê trên cùng nền. Hải gọi API đã chốt, không tự viết một phiên bản hash cache khác. Phân công này áp dụng cho kế hoạch 6 tuần: tuần 3 cache + LRU, tuần 4 read-ahead + thống kê, tuần 5 kiểm thử/đo đạc, tuần 6 ổn định và bàn giao.
+bio.c là file dùng chung: Quang tích hợp cấu trúc/đường cấp phát trước; Trung tích hợp LRU/thống kê trên cùng nền. Hải gọi API đã chốt, không tự viết một phiên bản hash cache khác.
 
 ## 7. Thứ tự triển khai và cổng nghiệm thu
 
-1. Tuần 2: đọc chéo bộ thiết kế đã chốt; Hải hoàn thiện tài liệu read-ahead và test baseline.
-2. Lưu baseline: commit, môi trường, CPU, log usertests/stressfs và test ghi–đọc.
-3. Tích hợp hash bucket + timestamp LRU; chạy correctness khi read-ahead OFF.
-4. Tích hợp nguồn yêu cầu, thống kê và snapshot/reset; kiểm thử đếm và khóa.
-5. Tích hợp đọc trước, EOF, direct/indirect, file description dùng chung.
-6. Chạy toàn bộ ma trận, so sánh ON/OFF và ghi số đo. Sửa lỗi correctness trước khi đánh giá hiệu năng.
+
+1. Lưu baseline: commit, môi trường, CPU, log usertests/stressfs và test ghi–đọc.
+2. Tích hợp hash bucket + timestamp LRU; chạy correctness khi read-ahead OFF.
+3. Tích hợp nguồn yêu cầu, thống kê và snapshot/reset; kiểm thử đếm và khóa.
+4. Tích hợp đọc trước, EOF, direct/indirect, file description dùng chung.
+5. Chạy toàn bộ ma trận, so sánh ON/OFF và ghi số đo. Sửa lỗi correctness trước khi đánh giá hiệu năng.
 
 Điều kiện nghiệm thu thiết kế: không còn giao diện mâu thuẫn, mọi chức năng có người phụ trách và ca kiểm thử. Điều kiện nghiệm thu implementation: có mã chạy, log đúng commit và các ca bắt buộc đạt; không dùng độ hoàn chỉnh của tài liệu làm bằng chứng code đã đúng.
 
