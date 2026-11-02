@@ -74,7 +74,7 @@ binit(void)
 
 // Return a locked buffer for (dev, blockno).
 static struct buf *
-bget(uint dev, uint blockno)
+bget(uint dev, uint blockno, int canfail)
 {
   struct buf *b;
   struct buf *candidate;
@@ -143,6 +143,8 @@ bget(uint dev, uint blockno)
 
     if (candidate == 0) {
       release(&bcache.evict_lock);
+      if (canfail)
+        return 0;
       panic("bget: no buffers");
     }
 
@@ -201,7 +203,23 @@ bread(uint dev, uint blockno)
 {
   struct buf *b;
 
-  b = bget(dev, blockno);
+  b = bget(dev, blockno, 0);
+  if (!b->valid) {
+    virtio_disk_rw(b, 0);
+    b->valid = 1;
+  }
+  return b;
+}
+
+// Optional read-ahead: fail gracefully when no cache buffer is available.
+struct buf *
+bread_ra(uint dev, uint blockno)
+{
+  struct buf *b;
+
+  b = bget(dev, blockno, 1);
+  if (b == 0)
+    return 0;
   if (!b->valid) {
     virtio_disk_rw(b, 0);
     b->valid = 1;
