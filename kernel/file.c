@@ -35,10 +35,6 @@ filealloc(void)
   for (f = ftable.file; f < ftable.file + NFILE; f++) {
     if (f->ref == 0) {
       f->ref = 1;
-      f->ra_has_history = 0;
-      f->ra_next_off = 0;
-      f->ra_last_block = 0;
-      f->ra_seq_blocks = 0;
       release(&ftable.lock);
       return f;
     }
@@ -123,18 +119,8 @@ fileread(struct file *f, uint64 addr, int n)
     r = devsw[f->major].read(1, addr, n);
   } else if (f->type == FD_INODE) {
     ilock(f->ip);
-    if (f->ip->type == T_FILE)
-      r = readi_ra(f->ip, 1, addr, f->off, n, f);
-    else
-      r = readi(f->ip, 1, addr, f->off, n);
-    if (r > 0)
+    if ((r = readi(f->ip, 1, addr, f->off, n)) > 0)
       f->off += r;
-    else if (n > 0 || r < 0) {
-#if READ_AHEAD_ENABLED
-      f->ra_has_history = 0;
-      f->ra_seq_blocks = 0;
-#endif
-    }
     iunlock(f->ip);
   } else {
     panic("fileread");
@@ -173,10 +159,6 @@ filewrite(struct file *f, uint64 addr, int n)
 
       begin_op();
       ilock(f->ip);
-#if READ_AHEAD_ENABLED
-      f->ra_has_history = 0;
-      f->ra_seq_blocks = 0;
-#endif
       if ((r = writei(f->ip, 1, addr + i, f->off, n1)) > 0)
         f->off += r;
       iunlock(f->ip);
