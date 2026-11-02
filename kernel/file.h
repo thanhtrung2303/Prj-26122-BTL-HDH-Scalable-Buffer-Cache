@@ -6,6 +6,11 @@ struct file {
   struct pipe *pipe; // FD_PIPE
   struct inode *ip;  // FD_INODE and FD_DEVICE
   uint off;          // FD_INODE
+  // Sequential read-ahead state, shared through filedup/fork.
+  int ra_has_history;
+  uint ra_next_off;
+  uint ra_last_block;
+  uint ra_seq_blocks;
   short major;       // FD_DEVICE
 };
 
