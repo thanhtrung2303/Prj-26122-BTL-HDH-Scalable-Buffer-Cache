@@ -52,7 +52,7 @@ main(void)
   unlink("ra_test.dat");
 
   if (n < 0 || pos != sizeof(expected)) {
-    printf("ra_test: short read (%d/%d)\n", pos, sizeof(expected));
+    printf("ra_test: short read (%d/%d)\n", pos, (int)sizeof(expected));
     exit(1);
   }
 
