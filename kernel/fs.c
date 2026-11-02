@@ -458,35 +458,6 @@ bmap(struct inode *ip, uint bn)
   panic("bmap: out of range");
 }
 
-// Look up an existing file block without allocating storage.
-// Caller must hold ip->lock. Never read beyond the current file size.
-static uint
-bmap_lookup_ra(struct inode *ip, uint bn)
-{
-  uint addr;
-  uint *a;
-  struct buf *bp;
-  uint blocks = (ip->size + BSIZE - 1) / BSIZE;
-
-  if (bn >= MAXFILE || bn >= blocks)
-    return 0;
-  if (bn < NDIRECT)
-    return ip->addrs[bn];
-
-  bn -= NDIRECT;
-  addr = ip->addrs[NDIRECT];
-  if (addr == 0)
-    return 0;
-
-  bp = bread_ra(ip->dev, addr);
-  if (bp == 0)
-    return 0;
-  a = (uint *)bp->data;
-  addr = a[bn];
-  brelse(bp);
-  return addr;
-}
-
 // Truncate inode (discard contents).
 // Caller must hold ip->lock.
 void
@@ -531,12 +502,15 @@ stati(struct inode *ip, struct stat *st)
   st->size = ip->size;
 }
 
-// Read data from inode. Caller must hold ip->lock.
-static int
-readi_common(struct inode *ip, int user_dst, uint64 dst, uint off, uint n,
-             struct file *f)
+// Read data from inode.
+// Caller must hold ip->lock.
+// If user_dst==1, then dst is a user virtual address;
+// otherwise, dst is a kernel address.
+int
+readi(struct inode *ip, int user_dst, uint64 dst, uint off, uint n)
 {
   uint tot, m;
+  struct buf *bp;
 
   if (off > ip->size || off + n < off)
     return 0;
@@ -544,73 +518,19 @@ readi_common(struct inode *ip, int user_dst, uint64 dst, uint off, uint n,
     n = ip->size - off;
 
   for (tot = 0; tot < n; tot += m, off += m, dst += m) {
-    uint bn = off / BSIZE;
-    uint addr = bmap(ip, bn);
-    struct buf *bp;
-    uint endoff;
-
+    uint addr = bmap(ip, off / BSIZE);
     if (addr == 0)
       break;
     bp = bread(ip->dev, addr);
     m = min(n - tot, BSIZE - off % BSIZE);
     if (either_copyout(user_dst, dst, bp->data + (off % BSIZE), m) == -1) {
       brelse(bp);
-      return -1;
+      tot = -1;
+      break;
     }
     brelse(bp);
-
-    endoff = off + m;
-#if READ_AHEAD_ENABLED
-    if (f != 0) {
-      if (!f->ra_has_history || off != f->ra_next_off) {
-        f->ra_seq_blocks = 1;
-      } else if (bn == f->ra_last_block) {
-        // Additional bytes from the same block do not extend the run.
-      } else if (bn == f->ra_last_block + 1) {
-        if (f->ra_seq_blocks < READ_AHEAD_BLOCKS)
-          f->ra_seq_blocks++;
-      } else {
-        f->ra_seq_blocks = 1;
-      }
-      f->ra_has_history = 1;
-      f->ra_last_block = bn;
-      f->ra_next_off = endoff;
-
-      if (endoff % BSIZE == 0 && endoff < ip->size &&
-          f->ra_seq_blocks >= 2) {
-        uint next_bn;
-        uint file_blocks = (ip->size + BSIZE - 1) / BSIZE;
-        for (next_bn = endoff / BSIZE;
-             next_bn < endoff / BSIZE + READ_AHEAD_BLOCKS &&
-             next_bn < file_blocks;
-             next_bn++) {
-          uint next_addr = bmap_lookup_ra(ip, next_bn);
-          struct buf *rabp;
-          if (next_addr == 0)
-            break;
-          rabp = bread_ra(ip->dev, next_addr);
-          if (rabp == 0)
-            break;
-          brelse(rabp);
-        }
-      }
-    }
-#endif
   }
   return tot;
-}
-
-int
-readi(struct inode *ip, int user_dst, uint64 dst, uint off, uint n)
-{
-  return readi_common(ip, user_dst, dst, off, n, 0);
-}
-
-int
-readi_ra(struct inode *ip, int user_dst, uint64 dst, uint off, uint n,
-         struct file *f)
-{
-  return readi_common(ip, user_dst, dst, off, n, f);
 }
 
 // Write data to inode.
