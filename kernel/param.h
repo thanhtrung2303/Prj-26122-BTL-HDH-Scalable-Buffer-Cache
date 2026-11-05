@@ -12,3 +12,7 @@
 #define FSSIZE      2000              // size of file system in blocks
 #define MAXPATH     128               // maximum file path name
 #define USERSTACK   1                 // user stack pages
+
+// Read-ahead configuration.
+#define READ_AHEAD_ENABLED 1
+#define READ_AHEAD_BLOCKS  2

@@ -458,6 +458,40 @@ bmap(struct inode *ip, uint bn)
   panic("bmap: out of range");
 }
 
+
+// Lookup an existing data block without allocating a new one.
+// Caller must hold ip->lock.
+uint
+bmap_lookup_ra(struct inode *ip, uint bn)
+{
+  uint addr;
+  uint *a;
+  uint blocks;
+  struct buf *bp;
+
+  // Reject blocks outside the file or filesystem mapping range.
+  blocks = ip->size / BSIZE + (ip->size % BSIZE != 0);
+  if (bn >= MAXFILE || bn >= blocks)
+    return 0;
+
+  // Direct block.
+  if (bn < NDIRECT)
+    return ip->addrs[bn];
+
+  // Indirect block.
+  bn -= NDIRECT;
+  addr = ip->addrs[NDIRECT];
+  if (addr == 0)
+    return 0;
+
+  bp = bread(ip->dev, addr);
+  a = (uint *)bp->data;
+  addr = a[bn];
+  brelse(bp);
+
+  return addr;
+}
+
 // Truncate inode (discard contents).
 // Caller must hold ip->lock.
 void
@@ -530,6 +564,102 @@ readi(struct inode *ip, int user_dst, uint64 dst, uint off, uint n)
     }
     brelse(bp);
   }
+  return tot;
+}
+
+
+// Read data from inode and track sequential access for read-ahead.
+// Caller must hold ip->lock.
+int
+readi_ra(struct inode *ip, int user_dst, uint64 dst, uint off, uint n,
+         struct file *f)
+{
+  uint tot, m;
+  struct buf *bp;
+
+  if (off > ip->size || off + n < off) {
+    f->ra_has_history = 0;
+    f->ra_seq_blocks = 0;
+    return 0;
+  }
+
+  // Reset history when the read reaches EOF.
+  if (off >= ip->size) {
+    f->ra_has_history = 0;
+    f->ra_seq_blocks = 0;
+    return 0;
+  }
+
+  if (off + n > ip->size)
+    n = ip->size - off;
+
+  for (tot = 0; tot < n; tot += m, off += m, dst += m) {
+    uint chunk_off = off;
+    uint bn = off / BSIZE;
+    uint addr = bmap(ip, bn);
+
+    if (addr == 0) {
+      f->ra_has_history = 0;
+      f->ra_seq_blocks = 0;
+      break;
+    }
+
+    bp = bread(ip->dev, addr);
+    m = min(n - tot, BSIZE - off % BSIZE);
+
+    if (either_copyout(user_dst, dst, bp->data + (off % BSIZE), m) == -1) {
+      brelse(bp);
+      f->ra_has_history = 0;
+      f->ra_seq_blocks = 0;
+      tot = -1;
+      break;
+    }
+
+    brelse(bp);
+
+#if READ_AHEAD_ENABLED
+    // Update sequential-read history only after successful copyout.
+    if (!f->ra_has_history || chunk_off != f->ra_next_off) {
+      f->ra_seq_blocks = 1;
+    } else if (bn == f->ra_last_block) {
+      // Another read within the same logical block.
+    } else if (bn == f->ra_last_block + 1) {
+      if (f->ra_seq_blocks < READ_AHEAD_BLOCKS)
+        f->ra_seq_blocks++;
+    } else {
+      f->ra_seq_blocks = 1;
+    }
+
+    f->ra_has_history = 1;
+    f->ra_last_block = bn;
+    f->ra_next_off = chunk_off + m;
+
+    // Prefetch the next blocks after detecting sequential access.
+    if (f->ra_seq_blocks >= READ_AHEAD_BLOCKS) {
+
+     uint ra_bn;
+     uint ra_addr;
+     uint i;
+
+     for (i = 1; i <= READ_AHEAD_BLOCKS; i++) {
+       ra_bn = bn + i;
+
+       // Do not prefetch beyond the end of the file.
+       if (ra_bn >= ip->size / BSIZE + (ip->size % BSIZE != 0))
+         break;
+
+       // Look up existing blocks without allocating new ones.
+       ra_addr = bmap_lookup_ra(ip, ra_bn);
+       if (ra_addr == 0)
+         break;
+
+       bp = bread(ip->dev, ra_addr);
+       brelse(bp);
+     }
+   }
+#endif
+  }
+
   return tot;
 }
 
