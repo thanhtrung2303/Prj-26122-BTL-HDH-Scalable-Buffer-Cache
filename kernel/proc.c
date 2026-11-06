@@ -525,6 +525,9 @@ forkret(void)
     // File system initialization must be run in the context of a
     // regular process (e.g., because it calls sleep), and thus cannot
     // be run from main().
+#if BCACHE_SELFTEST
+    bcache_selftest();
+#endif
     fsinit(ROOTDEV);
 
     // We can invoke kexec() now that file system is initialized.

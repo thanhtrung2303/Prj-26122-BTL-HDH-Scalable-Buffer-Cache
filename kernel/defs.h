@@ -14,6 +14,7 @@ struct superblock;
 void            binit(void);
 struct buf*     bread(uint, uint);
 struct buf*     bread_ra(uint, uint);
+void            bcache_selftest(void);
 void            brelse(struct buf*);
 void            bwrite(struct buf*);
 void            bpin(struct buf*);
