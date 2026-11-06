@@ -7,6 +7,12 @@ struct file {
   struct inode *ip;  // FD_INODE and FD_DEVICE
   uint off;          // FD_INODE
   short major;       // FD_DEVICE
+
+  // Read-ahead state, shared by dup() and fork().
+  int ra_has_history;
+  uint ra_next_off;
+  uint ra_last_block;
+  uint ra_seq_blocks;
 };
 
 #define major(dev)  ((dev) >> 16 & 0xFFFF)
