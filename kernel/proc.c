@@ -538,10 +538,10 @@ forkret(void)
   // Still holding p->lock from scheduler.
   release(&p->lock);
 
-  #if BCACHE_SELFTEST
+#if BCACHE_SELFTEST
   if (__atomic_load_n(&k07_running, __ATOMIC_ACQUIRE))
     bcache_k07_child();
-  #endif
+#endif
 
   if (first) {
     first = 0;
@@ -554,11 +554,11 @@ forkret(void)
 #endif
     fsinit(ROOTDEV);
 
-    #if BCACHE_SELFTEST
+#if BCACHE_SELFTEST
     __atomic_store_n(&k07_running, 1, __ATOMIC_RELEASE);
     bcache_k07();
     __atomic_store_n(&k07_running, 0, __ATOMIC_RELEASE);
-    #endif
+#endif
 
     // We can invoke kexec() now that file system is initialized.
     // Put the return value (argc) of kexec into a0.

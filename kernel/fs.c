@@ -458,7 +458,6 @@ bmap(struct inode *ip, uint bn)
   panic("bmap: out of range");
 }
 
-
 // Lookup an existing data block without allocating a new one.
 // Caller must hold ip->lock.
 uint
@@ -567,7 +566,6 @@ readi(struct inode *ip, int user_dst, uint64 dst, uint off, uint n)
   return tot;
 }
 
-
 // Read data from inode and track sequential access for read-ahead.
 // Caller must hold ip->lock.
 int
@@ -639,26 +637,26 @@ readi_ra(struct inode *ip, int user_dst, uint64 dst, uint off, uint n,
     // Prefetch the next blocks after detecting sequential access.
     if (f->ra_seq_blocks >= READ_AHEAD_BLOCKS) {
 
-     uint ra_bn;
-     uint ra_addr;
-     uint i;
+      uint ra_bn;
+      uint ra_addr;
+      uint i;
 
-     for (i = 1; i <= READ_AHEAD_BLOCKS; i++) {
-       ra_bn = bn + i;
+      for (i = 1; i <= READ_AHEAD_BLOCKS; i++) {
+        ra_bn = bn + i;
 
-       // Do not prefetch beyond the end of the file.
-       if (ra_bn >= ip->size / BSIZE + (ip->size % BSIZE != 0))
-         break;
+        // Do not prefetch beyond the end of the file.
+        if (ra_bn >= ip->size / BSIZE + (ip->size % BSIZE != 0))
+          break;
 
-       // Look up existing blocks without allocating new ones.
-       ra_addr = bmap_lookup_ra(ip, ra_bn);
-       if (ra_addr == 0)
-         break;
+        // Look up existing blocks without allocating new ones.
+        ra_addr = bmap_lookup_ra(ip, ra_bn);
+        if (ra_addr == 0)
+          break;
 
-       bp = bread(ip->dev, ra_addr);
-       brelse(bp);
-     }
-   }
+        bp = bread(ip->dev, ra_addr);
+        brelse(bp);
+      }
+    }
 #endif
   }
 

@@ -69,8 +69,7 @@ verify_test_file(char *name, int size)
 
     n = read(fd, io_buf, want);
     if (n <= 0) {
-      printf("FAIL: read error or unexpected EOF in %s at %d\n",
-             name, offset);
+      printf("FAIL: read error or unexpected EOF in %s at %d\n", name, offset);
       close(fd);
       return -1;
     }
@@ -78,8 +77,7 @@ verify_test_file(char *name, int size)
     for (int i = 0; i < n; i++) {
       char expected = 'A' + ((offset + i) % 26);
       if (io_buf[i] != expected) {
-        printf("FAIL: mismatch in %s at byte %d\n",
-               name, offset + i);
+        printf("FAIL: mismatch in %s at byte %d\n", name, offset + i);
         close(fd);
         return -1;
       }
