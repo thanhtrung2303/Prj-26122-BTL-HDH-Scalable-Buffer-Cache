@@ -1,0 +1,149 @@
+diff --git a/kernel/bio.c b/kernel/bio.c
+index 2470df0..d3b3fe7 100644
+--- a/kernel/bio.c
++++ b/kernel/bio.c
+@@ -286,3 +286,109 @@ bunpin(struct buf *b)
+   drop_reference(b);
+   release(&bcache.bucket[index].lock);
+ }
++#if BCACHE_SELFTEST
++// Run once, before fsinit, while no other process uses the cache.
++// Synthetic mappings are tested without issuing disk I/O.
++void
++bcache_selftest(void)
++{
++  struct buf *held[NBUF];
++  struct buf *b;
++  uint base = FSSIZE + 100;
++
++  printk("BCACHE SELFTEST starting\n");
++
++  // Fill the entire cache with pinned buffers.
++  for (int i = 0; i < NBUF; i++) {
++    held[i] = bget_source(ROOTDEV, base + i, DEMAND);
++    bpin(held[i]);
++    brelse(held[i]);
++  }
++
++  // A hit must reuse the existing mapping, even with no idle buffer.
++  for (int i = 0; i < NBUF; i++) {
++    b = bget_source(ROOTDEV, base + i, DEMAND);
++
++    if (b != held[i])
++      panic("selftest: duplicate mapping");
++
++    brelse(b);
++  }
++  printk("PASS: pinned mappings and repeated lookup\n");
++
++  // This block is absent. All buffers are pinned.
++  // bread_ra must return before any disk I/O can occur.
++  if (bread_ra(ROOTDEV, base + NBUF) != 0)
++    panic("selftest: full cache");
++
++  printk("PASS: read-ahead returns zero when full\n");
++
++  // Free exactly one buffer. The next miss must reuse that buffer.
++  // Changing dev by one also changes its hash bucket.
++  bunpin(held[0]);
++
++  b = bget_source(ROOTDEV + 1, base, DEMAND);
++  if (b != held[0])
++    panic("selftest: wrong victim");
++
++  if (b->dev != ROOTDEV + 1 || b->blockno != base)
++    panic("selftest: wrong mapping");
++
++  // Pin the new mapping, so the entire cache is pinned again.
++  bpin(b);
++  brelse(b);
++
++  // The old mapping must no longer exist.
++  if (bget_source(ROOTDEV, base, READ_AHEAD) != 0)
++    panic("selftest: stale mapping");
++
++  // The new mapping must be found at its new bucket.
++  b = bget_source(ROOTDEV + 1, base, DEMAND);
++  if (b != held[0])
++    panic("selftest: moved lookup");
++  brelse(b);
++
++  // Every other pinned mapping must remain intact.
++  for (int i = 1; i < NBUF; i++) {
++    b = bget_source(ROOTDEV, base + i, DEMAND);
++    if (b != held[i])
++      panic("selftest: pinned victim");
++    brelse(b);
++  }
++
++  printk("PASS: unpin, reuse and bucket migration\n");
++
++  for (int i = 0; i < NBUF; i++)
++    bunpin(held[i]);
++
++  // Remove synthetic mappings before normal filesystem startup.
++  acquire(&bcache.eviction_lock);
++  lock_all_buckets();
++
++  for (int i = 0; i < NBUF; i++) {
++    b = &bcache.buf[i];
++
++    if (b->refcnt != 0)
++      panic("selftest: leaked reference");
++
++    b->mapped = 0;
++    b->valid = 0;
++    b->dev = 0;
++    b->blockno = 0;
++    b->lastuse = 0;
++    b->hnext = 0;
++  }
++
++  for (int i = 0; i < NB_BUCKET; i++)
++    bcache.bucket[i].head = 0;
++
++  acquire(&lru_clock_lock);
++  lru_clock = 0;
++  release(&lru_clock_lock);
++
++  unlock_all_buckets();
++  release(&bcache.eviction_lock);
++
++  printk("BCACHE SELFTEST PASSED\n");
++}
++#endif
+diff --git a/kernel/defs.h b/kernel/defs.h
+index 9b73b4d..9faa837 100644
+--- a/kernel/defs.h
++++ b/kernel/defs.h
+@@ -14,6 +14,7 @@ struct superblock;
+ void            binit(void);
+ struct buf*     bread(uint, uint);
+ struct buf*     bread_ra(uint, uint);
++void            bcache_selftest(void);
+ void            brelse(struct buf*);
+ void            bwrite(struct buf*);
+ void            bpin(struct buf*);
+diff --git a/kernel/param.h b/kernel/param.h
+index 1d69801..add3dde 100644
+--- a/kernel/param.h
++++ b/kernel/param.h
+@@ -12,3 +12,4 @@
+ #define FSSIZE      2000              // size of file system in blocks
+ #define MAXPATH     128               // maximum file path name
+ #define USERSTACK   1                 // user stack pages
++#define BCACHE_SELFTEST 1
+diff --git a/kernel/proc.c b/kernel/proc.c
+index 31f23a3..6a49248 100644
+--- a/kernel/proc.c
++++ b/kernel/proc.c
+@@ -525,6 +525,9 @@ forkret(void)
+     // File system initialization must be run in the context of a
+     // regular process (e.g., because it calls sleep), and thus cannot
+     // be run from main().
++#if BCACHE_SELFTEST
++    bcache_selftest();
++#endif
+     fsinit(ROOTDEV);
+ 
+     // We can invoke kexec() now that file system is initialized.
