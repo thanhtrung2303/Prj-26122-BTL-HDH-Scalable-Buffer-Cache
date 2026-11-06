@@ -3,10 +3,10 @@
 #include "kernel/fcntl.h"
 #include "user/user.h"
 
-#define BLOCK_SIZE 1024
+#define BLOCK_SIZE  1024
 #define BLOCK_COUNT 64
-#define READERS 4
-#define ROUNDS 3
+#define READERS     4
+#define ROUNDS      3
 
 static char data[BLOCK_SIZE];
 static char *filename = "quang-cache.tmp";
