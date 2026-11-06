@@ -1,0 +1,17 @@
+Script started on 2026-11-06 14:54:49+07:00 [COMMAND="make qemu CPUS=1" TERM="xterm-256color" TTY="/dev/pts/0" COLUMNS="230" LINES="61"]
+mkfs/mkfs fs.img README user/_cat user/_echo user/_forktest user/_grep user/_init user/_kill user/_ln user/_ls user/_mkdir user/_rm user/_sh user/_stressfs user/_usertests user/_grind user/_wc user/_zombie user/_logstress user/_forphan user/_dorphan user/_sync user/_rwtest user/_cachecheck 
+nmeta 47 (boot, super, log blocks 31, inode blocks 13, bitmap blocks 1) blocks 1953 total 2000
+balloc: first 1053 blocks have been allocated
+balloc: write bitmap block at sector 46
+qemu-system-riscv64 -machine virt -bios none -kernel kernel/kernel -m 128M -smp 1 -nographic -global virtio-mmio.force-legacy=false -drive file=fs.img,if=none,format=raw,id=x0 -device virtio-blk-device,drive=x0,bus=virtio-mmio-bus.0
+
+xv6 kernel is booting
+
+init: starting sh
+$ cachecheck
+PASS: 64 KiB, 3 repeated reads, EOF
+PASS: 4 readers, each reading 64 KiB 3 times
+CACHECHECK PASSED
+$ QEMU: Terminated
+
+Script done on 2026-11-06 14:55:53+07:00 [COMMAND_EXIT_CODE="0"]
