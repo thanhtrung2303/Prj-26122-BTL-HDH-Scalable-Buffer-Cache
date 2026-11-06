@@ -2,17 +2,15 @@
 
 Bài tập lớn môn **Hệ điều hành**, học kỳ **20261**. Dự án cải tiến buffer cache trên **xv6-riscv** để giảm tranh chấp khóa và đánh giá hiệu quả đọc trước khi truy cập tuần tự.
 
-> Trạng thái: khởi tạo tài liệu và cấu trúc dự án. Các chức năng cải tiến, kết quả kiểm thử và tỷ lệ tiến độ chỉ được cập nhật khi có minh chứng. Kế hoạch thực hiện: **9 tuần**.
+> Kế hoạch thực hiện: **6 tuần tổng cộng; hiện ở tuần 2**. Các thiết kế đã được đưa vào repo; chức năng triển khai và kết quả kiểm thử chỉ được ghi hoàn thành khi có minh chứng.
 
 ## Thành viên
 
-| Thành viên | MSSV | Trách nhiệm tuần 1 |
+| Thành viên | MSSV | Nhiệm vụ |
 |---|---|---|
-| Đồng Xuân Quang | 20233603 | Kiểm tra môi trường, hướng dẫn chạy, khảo sát tổ chức cache |
-| Nguyễn Thành Trung | 20233680 | Quản lý repo, khảo sát luồng buffer cache, tổng hợp báo cáo |
-| Nguyễn Xuân Hải | 20233383 | Phân tích yêu cầu, tìm hiểu khái niệm, Trello và kế hoạch |
-
-Đây là phân công tuần 1. Phân công triển khai các tuần sau được nhóm chốt theo kế hoạch và công việc thực tế.
+| Đồng Xuân Quang | 20233603 | Hash bucket, khóa/cấp phát buffer, baseline và kiểm tra contention |
+| Nguyễn Thành Trung | 20233680 | Timestamp LRU, thống kê, tích hợp, tổng hợp báo cáo và slides |
+| Nguyễn Xuân Hải | 20233383 | Sequential read-ahead, test dữ liệu, ON/OFF và demo đọc tuần tự |
 
 ## Mục tiêu và phạm vi
 
@@ -23,8 +21,6 @@ Bài tập lớn môn **Hệ điều hành**, học kỳ **20261**. Dự án c�
 - Kiểm tra tính đúng đắn, tranh chấp khóa, thông lượng và hiệu quả read-ahead.
 - Demo contention trước/sau và tốc độ đọc tuần tự khi tắt/bật read-ahead.
 
-**Nâng cao:** write-back flusher; cấu hình dung lượng cache khi khởi động. Chỉ triển khai khi phần bắt buộc đã ổn định.
-
 ## Sản phẩm bàn giao
 
 1. Mã nguồn xv6 đã cải tiến, trọng tâm là `kernel/bio.c` và các file liên quan.
@@ -32,8 +28,6 @@ Bài tập lớn môn **Hệ điều hành**, học kỳ **20261**. Dự án c�
 3. Chương trình/kịch bản kiểm thử; log gốc, cấu hình chạy và bảng kết quả so sánh.
 4. Báo cáo tiến độ theo mẫu giảng viên, báo cáo cuối kỳ và slide.
 5. Kịch bản demo có thể chạy lại.
-
-Các sản phẩm chung khác cần đối chiếu thêm với phần Overview và thông báo của giảng viên.
 
 ## Cấu trúc repo
 
@@ -55,7 +49,7 @@ Các sản phẩm chung khác cần đối chiếu thêm với phần Overview v
 
 ## Lấy mã nguồn và chạy
 
-Thực hiện trong Ubuntu hoặc Ubuntu trên WSL2. VS Code dùng để đọc/sửa code; build và chạy bằng terminal Linux.
+Thực hiện trong Ubuntu. VS Code dùng để đọc/sửa code; build và chạy bằng terminal Linux.
 
 ```bash
 git clone https://github.com/thanhtrung2303/Prj-26122-BTL-HDH-Scalable-Buffer-Cache.git
@@ -79,21 +73,18 @@ Trong shell xv6, thử `ls`, `cat README`. Thoát QEMU bằng **Ctrl+A**, thả 
 
 `make clean` xóa sản phẩm build và `fs.img`, làm mất dữ liệu thử đã tạo trong ảnh đĩa. Chỉ dùng khi cần khởi tạo lại môi trường.
 
-## Kế hoạch 9 tuần
+## Kế hoạch 6 tuần
 
-| Tuần | Công việc | Mốc đầu ra |
+| Tuần | Mục tiêu | Mốc bàn giao |
 |---|---|---|
-| 1 | Môi trường, khảo sát cache, tổ chức dự án | Tài liệu khảo sát và báo cáo tiến độ |
-| 2 | Khảo sát sâu và chốt thiết kế | Bucket, quy tắc khóa, LRU, hướng read-ahead, test matrix |
-| 3 | Hash bucket và khóa từng bucket | Bản mới vượt kiểm thử cơ bản |
-| 4 | Timestamp LRU và kiểm tra đồng thời | Tái sử dụng buffer đúng, xử lý lỗi đồng bộ |
-| 5 | Hit/miss và đo ban đầu | Bộ đếm, bài test, số liệu bước đầu |
-| 6 | Tích hợp read-ahead | Đủ chức năng bắt buộc, bật/tắt được để so sánh |
-| 7 | Kiểm thử tổng thể và hiệu năng | Log, bảng so sánh và sửa lỗi |
-| 8 | Ổn định, báo cáo và slide | Bản demo và bản thảo đầy đủ |
-| 9 | Dự phòng, hoàn thiện và luyện bảo vệ | Bộ bàn giao và demo chạy lại được |
+| 1 | Môi trường và khảo sát | Tài liệu, log và báo cáo tuần 1; kiểm tra minh chứng thực tế |
+| 2 | Chốt thiết kế và baseline | Hash bucket/LRU/thống kê/read-ahead nhất quán; Hải có test ghi–đọc chạy trên nền |
+| 3 | Hash bucket + timestamp LRU | Cache mới chạy đúng khi read-ahead OFF; test cơ bản, vượt cache và đồng thời |
+| 4 | Read-ahead + thống kê | Bản đủ chức năng, ON/OFF và xem/reset; hoàn tất tích hợp trước cuối tuần |
+| 5 | Regression và đo đạc | Sửa lỗi, log kiểm thử, so sánh nền/cache mới và ON/OFF; nháp báo cáo |
+| 6 | Ổn định và bàn giao | Đầu tuần chốt chức năng; báo cáo, slides, demo và tập bảo vệ |
 
-Chi tiết: [kế hoạch](docs/project-plan.md), [phân công tuần 1](docs/week-01-tasks.md).
+Chi tiết từng người: [project-plan.md](docs/project-plan.md). Hợp đồng kỹ thuật: [integration.md](docs/design/integration.md). Ca kiểm thử và minh chứng: [test_plan.md](tests/test_plan.md).
 
 ## Quy trình đóng góp
 
@@ -116,8 +107,6 @@ git push -u origin docs/buffer-cache-notes
 
 Mở PR trên GitHub, ghi nội dung đã làm, cách kiểm tra và vấn đề còn tồn tại. Sau khi merge, mọi người cập nhật `main` bằng `git pull --ff-only origin main`.
 
-Không đưa token/mật khẩu hoặc sản phẩm build vào commit. Giữ lại `README`, `LICENSE` và lịch sử xv6 gốc. Quy tắc review là quy ước nhóm; chưa có nghĩa repo đã bật bảo vệ nhánh.
-
 ## Kiểm thử và báo cáo
 
 - Kiểm thử có sẵn chạy **bên trong shell xv6**: `usertests`, `stressfs`; lưu kết quả thực tế, không mặc định đã pass.
@@ -129,13 +118,13 @@ Không đưa token/mật khẩu hoặc sản phẩm build vào commit. Giữ l�
 
 ## Liên kết nhóm
 
-- Trello: **Chưa bổ sung — Hải cập nhật.**
-- Figma/FigJam: **Chưa bổ sung — nhóm tạo và cập nhật.**
-- Báo cáo tuần 1: [khung báo cáo](reports/week-01/README.md).
+- Trello: https://trello.com/b/rMe3J4Uu/project-26122-buffer-cache-xv6
+- Figma/FigJam: https://www.figma.com/board/XfyWpGJ6HHEUFiIF6UFkwP/Project-26122-%E2%80%94-Lu%E1%BB%93ng-%C4%91%E1%BB%8Dc-buffer-cache-xv6?node-id=12-133&t=6CLENMT9h0baHPKa-0
 - [Nguồn tham khảo](docs/references.md).
 
 ## Nguồn gốc và giấy phép
 
-Dự án phát triển từ [MIT xv6-riscv](https://github.com/mit-pdos/xv6-riscv). Commit được kiểm tra khi khởi tạo tài liệu: `f780d7850765d74cbdcd1fff4b822d8829f7c9bd`.
+Dự án phát triển từ [MIT xv6-riscv](https://github.com/mit-pdos/xv6-riscv).
 
 Tham khảo [README gốc](README) và [LICENSE](LICENSE). Tài liệu nhóm phải ghi rõ nội dung tham khảo và phần tự phát triển.
+

@@ -1,0 +1,15 @@
+Script started on 2026-11-06 14:56:20+07:00 [COMMAND="make qemu CPUS=3" TERM="xterm-256color" TTY="/dev/pts/0" COLUMNS="230" LINES="61"]
+qemu-system-riscv64 -machine virt -bios none -kernel kernel/kernel -m 128M -smp 3 -nographic -global virtio-mmio.force-legacy=false -drive file=fs.img,if=none,format=raw,id=x0 -device virtio-blk-device,drive=x0,bus=virtio-mmio-bus.0
+
+xv6 kernel is booting
+
+hart 2 starting
+hart 1 starting
+init: starting sh
+$ cachecheck
+PASS: 64 KiB, 3 repeated reads, EOF
+PASS: 4 readers, each reading 64 KiB 3 times
+CACHECHECK PASSED
+$ QEMU: Terminated
+
+Script done on 2026-11-06 14:57:53+07:00 [COMMAND_EXIT_CODE="0"]

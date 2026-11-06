@@ -1,0 +1,28 @@
+==================================================
+XV6 FILE READ/WRITE TEST RESULT
+==================================================
+
+Member: Nguyen Xuan Hai
+Student ID: 20233383
+Test program: user/rwtest.c
+Test data size: 4096 bytes
+
+Build result: PASS
+QEMU boot result: PASS
+
+Command executed in xv6:
+$ rwtest
+
+Actual test output:
+=== File Read/Write Test ===
+PASS: all 4096 bytes match
+
+QEMU exit code: 0
+
+Conclusion:
+The test successfully wrote and read 4096 bytes. The data read back matched the original data.
+
+Local evidence logs:
+- test-evidence/build-test.log
+- test-evidence/qemu-test.log
+==================================================

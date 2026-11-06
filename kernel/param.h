@@ -14,5 +14,7 @@
 #define USERSTACK   1                 // user stack pages
 
 // Read-ahead configuration.
-#define READ_AHEAD_ENABLED 1
+#define READ_AHEAD_ENABLED 0
 #define READ_AHEAD_BLOCKS  2
+
+#define BCACHE_SELFTEST 0

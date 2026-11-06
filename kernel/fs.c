@@ -594,7 +594,9 @@ readi_ra(struct inode *ip, int user_dst, uint64 dst, uint off, uint n,
     n = ip->size - off;
 
   for (tot = 0; tot < n; tot += m, off += m, dst += m) {
+#if READ_AHEAD_ENABLED
     uint chunk_off = off;
+#endif
     uint bn = off / BSIZE;
     uint addr = bmap(ip, bn);
 

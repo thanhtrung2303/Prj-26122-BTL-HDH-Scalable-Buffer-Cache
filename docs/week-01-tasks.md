@@ -1,5 +1,7 @@
 # Phân công tuần 1
 
+> Lưu lịch sử phân công tuần 1. Kế hoạch hiện hành đã đổi sang **6 tuần**, xem [project-plan.md](project-plan.md); không dùng lịch 9 tuần ban đầu để giao việc mới.
+
 Mục tiêu: môi trường hoạt động, hiểu cache hiện tại, tổ chức cách làm việc. Tận dụng Tutorial 4; chưa yêu cầu sửa kernel/đo hiệu năng.
 
 | Người | Việc | Đầu ra | Người đọc chéo |
@@ -17,3 +19,4 @@ Mục tiêu: môi trường hoạt động, hiểu cache hiện tại, tổ ch�
 - Đọc chéo, phản hồi trên PR/Trello.
 - Chỉ đánh dấu hoàn thành khi có sản phẩm được kiểm tra.
 - Chưa xong: ghi nguyên nhân và bước xử lý tiếp theo, không điền kết quả giả.
+
