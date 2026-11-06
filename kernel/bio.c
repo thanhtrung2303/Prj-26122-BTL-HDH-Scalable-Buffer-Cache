@@ -114,7 +114,7 @@ drop_reference(struct buf *b)
     acquire(&lru_clock_lock);
 
     // Send error if lru_clock reaches max value.
-    if (lru_clock == ~(uint64)0){
+    if (lru_clock == ~(uint64)0) {
       panic("bcache: lru clock overflow");
     }
 
@@ -404,7 +404,7 @@ bcache_selftest(void)
   brelse(b);
 
   // refcnt from 2 to 1: timestamp remain unchanged.
-  if (b->refcnt != 1 || b->lastuse != previous ||  lru_clock != clock_before)
+  if (b->refcnt != 1 || b->lastuse != previous || lru_clock != clock_before)
     panic("selftest: timestamp while pinned");
 
   // All buffers are now either held or pinned.
@@ -414,7 +414,8 @@ bcache_selftest(void)
   bunpin(b);
 
   // refcnt from 1 to 0: assign new timestamp.
-  if (b->refcnt != 0 || b->lastuse != clock_before + 1 ||  lru_clock != clock_before + 1)
+  if (b->refcnt != 0 || b->lastuse != clock_before + 1 ||
+      lru_clock != clock_before + 1)
     panic("selftest: last unpin timestamp");
 
   printk("PASS K06: timestamp only on final release\n");

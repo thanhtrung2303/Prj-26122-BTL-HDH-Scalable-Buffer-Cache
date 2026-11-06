@@ -56,6 +56,8 @@ int             namecmp(const char*, const char*);
 struct inode*   namei(char*);
 struct inode*   nameiparent(char*, char*);
 int             readi(struct inode*, int, uint64, uint, uint);
+int             readi_ra(struct inode*, int, uint64, uint, uint, struct file*);
+uint            bmap_lookup_ra(struct inode*, uint);
 void            stati(struct inode*, struct stat*);
 int             writei(struct inode*, int, uint64, uint, uint);
 void            itrunc(struct inode*);

@@ -3,61 +3,153 @@
 #include "user/user.h"
 #include "kernel/fcntl.h"
 
-#define DATA_SIZE 4096
+#define BASIC_SIZE 4096
+#define LARGE_SIZE (64 * 1024)
+#define CHUNK_SIZE 512
 
-static char write_buf[DATA_SIZE];
-static char read_buf[DATA_SIZE];
+static char io_buf[CHUNK_SIZE];
+
+int
+write_test_file(char *name, int size)
+{
+  int fd;
+  int offset = 0;
+
+  fd = open(name, O_CREATE | O_WRONLY | O_TRUNC);
+  if (fd < 0) {
+    printf("FAIL: cannot create %s\n", name);
+    return -1;
+  }
+
+  while (offset < size) {
+    int chunk = size - offset;
+    int done = 0;
+
+    if (chunk > CHUNK_SIZE)
+      chunk = CHUNK_SIZE;
+
+    for (int i = 0; i < chunk; i++)
+      io_buf[i] = 'A' + ((offset + i) % 26);
+
+    while (done < chunk) {
+      int n = write(fd, io_buf + done, chunk - done);
+      if (n <= 0) {
+        printf("FAIL: write error in %s\n", name);
+        close(fd);
+        return -1;
+      }
+      done += n;
+    }
+
+    offset += chunk;
+  }
+
+  close(fd);
+  return 0;
+}
+
+int
+verify_test_file(char *name, int size)
+{
+  int fd;
+  int offset = 0;
+
+  fd = open(name, O_RDONLY);
+  if (fd < 0) {
+    printf("FAIL: cannot open %s for reading\n", name);
+    return -1;
+  }
+
+  while (offset < size) {
+    int want = size - offset;
+    int n;
+
+    if (want > CHUNK_SIZE)
+      want = CHUNK_SIZE;
+
+    n = read(fd, io_buf, want);
+    if (n <= 0) {
+      printf("FAIL: read error or unexpected EOF in %s at %d\n", name, offset);
+      close(fd);
+      return -1;
+    }
+
+    for (int i = 0; i < n; i++) {
+      char expected = 'A' + ((offset + i) % 26);
+      if (io_buf[i] != expected) {
+        printf("FAIL: mismatch in %s at byte %d\n", name, offset + i);
+        close(fd);
+        return -1;
+      }
+    }
+
+    offset += n;
+  }
+
+  close(fd);
+  return 0;
+}
 
 int
 main(void)
 {
-  int fd;
-  int i;
+  int pid;
+  int status = -1;
+  int waited;
 
-  printf("=== File Read/Write Test ===\n");
+  printf("=== xv6 Read/Write Tests ===\n");
 
-  // Prepare test data.
-  for (i = 0; i < DATA_SIZE; i++)
-    write_buf[i] = (char)(i % 256);
-
-  // Create/open the test file and write data.
-  fd = open("rwtest.dat", O_CREATE | O_RDWR);
-  if (fd < 0) {
-    printf("FAIL: cannot open file for writing\n");
+  // Test 1: Basic file read/write.
+  if (write_test_file("rw_test_data", BASIC_SIZE) < 0)
     exit(1);
-  }
 
-  if (write(fd, write_buf, DATA_SIZE) != DATA_SIZE) {
-    printf("FAIL: write error\n");
-    close(fd);
+  if (verify_test_file("rw_test_data", BASIC_SIZE) < 0)
     exit(1);
-  }
 
-  close(fd);
+  printf("PASS: basic read/write (%d bytes)\n", BASIC_SIZE);
 
-  // Reopen the file and read the data back.
-  fd = open("rwtest.dat", O_RDONLY);
-  if (fd < 0) {
-    printf("FAIL: cannot open file for reading\n");
-    exit(1);
-  }
-
-  if (read(fd, read_buf, DATA_SIZE) != DATA_SIZE) {
-    printf("FAIL: read error\n");
-    close(fd);
-    exit(1);
-  }
-
-  close(fd);
-
-  // Compare written data with data read from the file.
-  for (i = 0; i < DATA_SIZE; i++) {
-    if (write_buf[i] != read_buf[i]) {
-      printf("FAIL: data mismatch at byte %d\n", i);
+  // Test 2: Repeated reads.
+  for (int i = 0; i < 5; i++) {
+    if (verify_test_file("rw_test_data", BASIC_SIZE) < 0)
       exit(1);
-    }
   }
 
-  printf("PASS: all %d bytes match\n", DATA_SIZE);
+  printf("PASS: repeated reads (5 times)\n");
+
+  // Test 3: Read a file larger than the buffer cache.
+  if (write_test_file("ra_data", LARGE_SIZE) < 0)
+    exit(1);
+
+  if (verify_test_file("ra_data", LARGE_SIZE) < 0)
+    exit(1);
+
+  printf("PASS: large file read (%d bytes)\n", LARGE_SIZE);
+
+  // Test 4: Parent and child read the same file concurrently.
+  pid = fork();
+
+  if (pid < 0) {
+    printf("FAIL: fork error\n");
+    exit(1);
+  }
+
+  if (pid == 0) {
+    int result = verify_test_file("ra_data", LARGE_SIZE);
+    exit(result == 0 ? 0 : 1);
+  }
+
+  if (verify_test_file("ra_data", LARGE_SIZE) < 0)
+    exit(1);
+
+  waited = wait(&status);
+
+  if (waited != pid || status != 0) {
+    printf("FAIL: concurrent read (child status=%d)\n", status);
+    exit(1);
+  }
+
+  printf("PASS: concurrent read (parent + child)\n");
+  printf("=== ALL TESTS PASSED ===\n");
+
   exit(0);
 }
