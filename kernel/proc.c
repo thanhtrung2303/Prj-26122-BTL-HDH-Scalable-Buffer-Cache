@@ -507,6 +507,25 @@ yield(void)
   release(&p->lock);
 }
 
+#if BCACHE_SELFTEST
+static int k07_running;
+
+int
+bcache_k07_sleeping(int pid, void *chan)
+{
+  for (struct proc *p = proc; p < &proc[NPROC]; p++) {
+    acquire(&p->lock);
+    int waiting = p->pid == pid && p->state == SLEEPING && p->chan == chan;
+    release(&p->lock);
+
+    if (waiting)
+      return 1;
+  }
+  return 0;
+}
+
+#endif
+
 // A fork child's very first scheduling by scheduler()
 // will swtch to forkret.
 void
@@ -519,6 +538,11 @@ forkret(void)
   // Still holding p->lock from scheduler.
   release(&p->lock);
 
+  #if BCACHE_SELFTEST
+  if (__atomic_load_n(&k07_running, __ATOMIC_ACQUIRE))
+    bcache_k07_child();
+  #endif
+
   if (first) {
     first = 0;
 
@@ -529,6 +553,12 @@ forkret(void)
     bcache_selftest();
 #endif
     fsinit(ROOTDEV);
+
+    #if BCACHE_SELFTEST
+    __atomic_store_n(&k07_running, 1, __ATOMIC_RELEASE);
+    bcache_k07();
+    __atomic_store_n(&k07_running, 0, __ATOMIC_RELEASE);
+    #endif
 
     // We can invoke kexec() now that file system is initialized.
     // Put the return value (argc) of kexec into a0.

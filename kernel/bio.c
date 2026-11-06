@@ -453,4 +453,89 @@ bcache_selftest(void)
 
   printk("BCACHE SELFTEST PASSED\n");
 }
+
+#define K07_BLOCK (FSSIZE + 200)
+
+static int k07_can_release;
+
+void
+bcache_k07_child(void)
+{
+  struct buf *b = bget_source(ROOTDEV, K07_BLOCK, DEMAND);
+  uint index = cache_hash(ROOTDEV, K07_BLOCK);
+
+  // Hold the final reference until the parent checks the first release.
+  while (!__atomic_load_n(&k07_can_release, __ATOMIC_ACQUIRE))
+    yield();
+
+  acquire(&bcache.bucket[index].lock);
+  uint64 previous = b->lastuse;
+  release(&bcache.bucket[index].lock);
+
+  brelse(b);
+
+  acquire(&bcache.bucket[index].lock);
+  if (b->refcnt != 0 || b->lastuse <= previous)
+    panic("K07: final release did not update timestamp");
+  release(&bcache.bucket[index].lock);
+
+  kexit(0);
+}
+
+void
+bcache_k07(void)
+{
+  struct buf *held[NBUF];
+  uint index = cache_hash(ROOTDEV, K07_BLOCK);
+
+  // Fill the cache with synthetic buffers without reading from disk.
+  for (int i = 0; i < NBUF; i++)
+    held[i] = bget_source(ROOTDEV, K07_BLOCK + i, DEMAND);
+
+  struct buf *b = held[0];
+  uint64 previous = b->lastuse;
+  int pid = kfork();
+  if (pid < 0)
+    panic("K07: fork failed");
+
+  acquire(&tickslock);
+  uint start = ticks;
+  release(&tickslock);
+
+  // Wait until the child sleeps on this exact buffer lock.
+  while (!bcache_k07_sleeping(pid, &b->lock)) {
+    acquire(&tickslock);
+    uint elapsed = ticks - start;
+    release(&tickslock);
+
+    if (elapsed >= 100)
+      panic("K07: child did not sleep on buffer");
+    yield();
+  }
+
+  acquire(&bcache.bucket[index].lock);
+  if (b->refcnt != 2)
+    panic("K07: waiter reference missing");
+  release(&bcache.bucket[index].lock);
+
+  brelse(b);
+
+  acquire(&bcache.bucket[index].lock);
+  if (b->refcnt != 1 || b->lastuse != previous)
+    panic("K07: timestamp changed before final release");
+  release(&bcache.bucket[index].lock);
+
+  // All buffers still have references, so a cache miss must return zero.
+  if (bget_source(ROOTDEV, K07_BLOCK + NBUF, READ_AHEAD) != 0)
+    panic("K07: reused referenced buffer");
+
+  for (int i = 1; i < NBUF; i++)
+    brelse(held[i]);
+
+  __atomic_store_n(&k07_can_release, 1, __ATOMIC_RELEASE);
+  if (kwait(0) != pid)
+    panic("K07: wait failed");
+
+  printk("PASS K07: waiter protects buffer until final release\n");
+}
 #endif
