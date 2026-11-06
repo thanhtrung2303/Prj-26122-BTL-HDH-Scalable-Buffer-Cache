@@ -112,6 +112,12 @@ drop_reference(struct buf *b)
 
   if (b->refcnt == 0) {
     acquire(&lru_clock_lock);
+
+    // Send error if lru_clock reaches max value.
+    if (lru_clock == ~(uint64)0){
+      panic("bcache: lru clock overflow");
+    }
+
     b->lastuse = ++lru_clock;
     release(&lru_clock_lock);
   }
@@ -362,6 +368,62 @@ bcache_selftest(void)
     bunpin(held[i]);
 
   // Remove synthetic mappings before normal filesystem startup.
+
+  // K05: Hold all buffers, then release two from different buckets.
+  for (int i = 0; i < NBUF; i++)
+    held[i] = bget_source(ROOTDEV, base + i, DEMAND);
+
+  // Make the buffer in the higher-numbered bucket the older one.
+  int older = 0;
+  int newer = 1;
+
+  if (cache_hash(ROOTDEV, base) < cache_hash(ROOTDEV, base + 1)) {
+    older = 1;
+    newer = 0;
+  }
+
+  brelse(held[older]);
+  brelse(held[newer]);
+
+  // A cache miss should reuse the buffer that was released first.
+  b = bget_source(ROOTDEV, base + NBUF, DEMAND);
+
+  if (b != held[older])
+    panic("selftest: global LRU");
+
+  held[older] = b;
+  printk("PASS K05: oldest idle buffer across buckets\n");
+
+  // K06: Reacquire the remaining idle buffer and test pin/unpin.
+  b = bget_source(ROOTDEV, base + newer, DEMAND);
+
+  uint64 previous = b->lastuse;
+  uint64 clock_before = lru_clock;
+
+  bpin(b);
+  brelse(b);
+
+  // refcnt from 2 to 1: timestamp remain unchanged.
+  if (b->refcnt != 1 || b->lastuse != previous ||  lru_clock != clock_before)
+    panic("selftest: timestamp while pinned");
+
+  // All buffers are now either held or pinned.
+  if (bget_source(ROOTDEV, base + NBUF + 1, READ_AHEAD) != 0)
+    panic("selftest: reused pinned buffer");
+
+  bunpin(b);
+
+  // refcnt from 1 to 0: assign new timestamp.
+  if (b->refcnt != 0 || b->lastuse != clock_before + 1 ||  lru_clock != clock_before + 1)
+    panic("selftest: last unpin timestamp");
+
+  printk("PASS K06: timestamp only on final release\n");
+
+  // Release the remaining held buffers; the newer buffer is now idle.
+  for (int i = 0; i < NBUF; i++) {
+    if (i != newer)
+      brelse(held[i]);
+  }
   acquire(&bcache.eviction_lock);
   lock_all_buckets();
 
