@@ -11,6 +11,6 @@ Kế hoạch chi tiết hiện hành: [test_plan.md](test_plan.md), gồm ca d�
 | Hải | Test ghi–đọc, repeat/capacity/concurrent; read-ahead/EOF/indirect/shared file; ON/OFF | Test đầu tiên + log B0 tuần 2; test cache tuần 3; read-ahead tuần 4–5 |
 | Cả nhóm | Build/boot trên máy từng người, kiểm tra bản bàn giao và tập demo | Tuần 2 và regression theo thay đổi; demo tuần 6 |
 
-Các ID và cổng ưu tiên theo [project-plan.md](../docs/project-plan.md#6-kiểm-thử-ưu-tiên-và-mốc-nghiệm-thu). 47 ca có thể dùng chung chương trình/hook; không cần viết 47 chương trình riêng. Không bỏ test correctness chỉ để kịp hạn; ghi rõ ca chưa chạy/chưa đạt.
+Các ID và cổng ưu tiên theo [project-plan.md](../docs/project-plan.md#6-kiểm-thử-ưu-tiên-và-mốc-nghiệm-thu). Kế hoạch giữ 21 ca, dùng chung các chương trình và self-test hiện có khi phù hợp. Không bỏ test correctness chỉ để kịp hạn; ghi rõ ca chưa chạy/chưa đạt.
 
 Chương trình C chạy trong xv6 đặt ở user/ và đăng ký UPROGS. Script host đặt ở scripts/. Không mặc định có bcachetest hoặc test hook khi chưa kiểm tra mã. Mỗi log ghi SHA, môi trường, CPU, cache/config ON/OFF, dữ liệu và kết quả; log thất bại cũng được lưu.

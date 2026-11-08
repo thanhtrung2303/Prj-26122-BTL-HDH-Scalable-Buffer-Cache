@@ -56,14 +56,14 @@ Mã thử nghiệm sẵn có trong PR của Hải phải đối chiếu hợp đ
 
 ## 6. Kiểm thử ưu tiên và mốc nghiệm thu
 
-Danh mục chi tiết: [test_plan.md](../tests/test_plan.md). 47 ca là danh mục kiểm tra; nhiều ca dùng chung một chương trình/hook, không phải 47 chương trình độc lập.
+Danh mục chi tiết: [test_plan.md](../tests/test_plan.md). Kế hoạch rút gọn giữ 21 ca và dùng chung chương trình hoặc self-test khi phù hợp.
 
 | Mốc | Ca ưu tiên | Điều kiện |
 |---|---|---|
 | Tuần 2 | B01–B04 trên B0 theo phạm vi từng người | Baseline và test ghi–đọc có log; không yêu cầu mọi test sau tích hợp chạy ngay |
-| Tuần 3 | B01–B04, D01–D03, K01–K07, K09 trên C0 | Dữ liệu đúng, không trùng buffer, không thu hồi buffer đang giữ/pin; LRU đúng |
-| Tuần 4 | D04–D10, R01–R08, S01–S11; lặp regression C0/C1 | Đọc trước/thống kê tích hợp, ON/OFF đúng, không lỗi EOF/indirect hoặc refcnt |
-| Tuần 5 | Chạy toàn bộ nhóm chức năng B/D/K/R/S, gồm K08/K10; P01–P04 | Có log; lỗi phải sửa hoặc ghi chưa đạt; đo contention trước khi kết luận giảm contention |
+| Tuần 3 | B01–B04, D01–D03, K01, K03, K05–K07, K09 trên C0 | Dữ liệu đúng, không trùng buffer, không thu hồi buffer đang giữ/pin; LRU đúng |
+| Tuần 4 | D04, D07, D08, R08, S02; lặp hồi quy C0/C1 | Đọc trước/thống kê tích hợp, ON/OFF đúng, không lỗi EOF/indirect hoặc refcnt |
+| Tuần 5 | Chạy lại các ca chức năng bị ảnh hưởng; đo P01, P02, P04 | Có log; lỗi phải sửa hoặc ghi chưa đạt; đo contention trước khi kết luận giảm contention |
 | Tuần 6 | Chạy lại regression/ca bị ảnh hưởng bởi sửa lỗi và rehearsal demo | Bản bàn giao có thể tái hiện; không tự ghi PASS cho ca chưa chạy |
 
 Không giảm tiêu chí đúng dữ liệu/deadlock để kịp hạn. Nếu chậm: dừng mở rộng, dùng chung test/hook và ưu tiên sửa lỗi; báo rõ mục tiêu nào chưa đạt. Hiệu năng không có ngưỡng phần trăm tự đặt sau khi đo; báo cả khi RA đồng bộ không tăng tốc.
