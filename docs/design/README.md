@@ -7,7 +7,7 @@ Bộ thiết kế tuần 2 phục vụ kế hoạch **6 tuần**:
 | [hash-bucket.md](hash-bucket.md) | Quang — cấu trúc cache, cấp phát và khóa |
 | [timestamp_lru.md](timestamp_lru.md) | Trung — lru_clock, lastuse, brelse/bunpin và chọn nạn nhân |
 | [cache_statistics.md](cache_statistics.md) | Trung — nguồn demand/read-ahead, bộ đếm và xem/reset |
-| [read_ahead.md](read_ahead.md) | Hải — tuần tự, trạng thái file, ánh xạ không cấp phát và ON/OFF |
+| [read-ahead.md](read-ahead.md) | Hải — tuần tự, trạng thái file, ánh xạ không cấp phát và ON/OFF |
 | [integration.md](integration.md) | Trung tổng hợp — cấu trúc/giao diện/luồng chung và phân công |
 | [test_plan.md](../../tests/test_plan.md) | Cả nhóm — ca kiểm thử, chủ sở hữu và minh chứng |
 
