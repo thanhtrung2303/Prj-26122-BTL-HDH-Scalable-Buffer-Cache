@@ -508,6 +508,9 @@ yield(void)
 }
 
 #if BCACHE_SELFTEST
+#if BCACHE_K01
+static int k01_running;
+#endif
 static int k07_running;
 
 int
@@ -539,6 +542,10 @@ forkret(void)
   release(&p->lock);
 
 #if BCACHE_SELFTEST
+#if BCACHE_K01
+  if (__atomic_load_n(&k01_running, __ATOMIC_ACQUIRE))
+    bcache_k01_child();
+#endif
   if (__atomic_load_n(&k07_running, __ATOMIC_ACQUIRE))
     bcache_k07_child();
 #endif
@@ -555,6 +562,11 @@ forkret(void)
     fsinit(ROOTDEV);
 
 #if BCACHE_SELFTEST
+#if BCACHE_K01
+    __atomic_store_n(&k01_running, 1, __ATOMIC_RELEASE);
+    bcache_k01();
+    __atomic_store_n(&k01_running, 0, __ATOMIC_RELEASE);
+#endif
     __atomic_store_n(&k07_running, 1, __ATOMIC_RELEASE);
     bcache_k07();
     __atomic_store_n(&k07_running, 0, __ATOMIC_RELEASE);
