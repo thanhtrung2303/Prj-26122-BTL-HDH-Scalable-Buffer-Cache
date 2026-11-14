@@ -15,6 +15,8 @@ void            binit(void);
 struct buf*     bread(uint, uint);
 struct buf*     bread_ra(uint, uint);
 void            bcache_selftest(void);
+void            bcache_k01(void);
+void            bcache_k01_child(void);
 void            bcache_k07(void);
 void            bcache_k07_child(void);
 int             bcache_k07_sleeping(int, void *);

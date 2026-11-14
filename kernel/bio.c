@@ -150,6 +150,31 @@ binit(void)
   }
 }
 
+#if BCACHE_K01 && !BCACHE_SELFTEST
+#error "BCACHE_K01 requires BCACHE_SELFTEST"
+#endif
+
+#if BCACHE_K01
+#define K01_BLOCK (FSSIZE + 300)
+static int k01_arrivals, k01_allocations, k01_rechecks;
+static struct buf *k01_child_buf;
+
+// Both harts must miss before either can enter the eviction path.
+// Stay on this hart until its peer arrives. No cache lock is held.
+static void
+k01_after_miss(void)
+{
+  push_off();
+  uint64 start = r_time();
+  __atomic_add_fetch(&k01_arrivals, 1, __ATOMIC_ACQ_REL);
+  while (__atomic_load_n(&k01_arrivals, __ATOMIC_ACQUIRE) != 2) {
+    if (r_time() - start > 50000000)
+      panic("K01: second hart did not reach miss");
+  }
+  pop_off();
+}
+#endif
+
 // Success: returns a referenced, sleep-locked buffer.
 // READ_AHEAD may return 0 when no buffer is available.
 static struct buf *
@@ -171,6 +196,11 @@ bget_source(uint dev, uint blockno, enum cache_source source)
 
   release(&bcache.bucket[index].lock);
 
+#if BCACHE_K01
+  if (dev == ROOTDEV && blockno == K01_BLOCK)
+    k01_after_miss();
+#endif
+
   // Slow path: serialize allocation and stabilize all mappings.
   acquire(&bcache.eviction_lock);
   lock_all_buckets();
@@ -179,6 +209,10 @@ bget_source(uint dev, uint blockno, enum cache_source source)
   b = lookup(index, dev, blockno);
 
   if (b) {
+#if BCACHE_K01
+    if (dev == ROOTDEV && blockno == K01_BLOCK)
+      k01_rechecks++;
+#endif
     b->refcnt++;
   } else {
     b = choose_victim();
@@ -196,6 +230,10 @@ bget_source(uint dev, uint blockno, enum cache_source source)
     if (b->mapped)
       unlink_buffer(b);
 
+#if BCACHE_K01
+    if (dev == ROOTDEV && blockno == K01_BLOCK)
+      k01_allocations++;
+#endif
     b->dev = dev;
     b->blockno = blockno;
     b->mapped = 1;
@@ -293,6 +331,65 @@ bunpin(struct buf *b)
   release(&bcache.bucket[index].lock);
 }
 #if BCACHE_SELFTEST
+// Check both representations while mappings are stable. A repeated pointer
+// also catches a cycle before following the same link a second time.
+static void
+check_mappings(void)
+{
+  int seen[NBUF] = {0};
+
+  acquire(&bcache.eviction_lock);
+  lock_all_buckets();
+  for (uint i = 0; i < NB_BUCKET; i++) {
+    for (struct buf *b = bcache.bucket[i].head; b; b = b->hnext) {
+      int j = 0;
+      while (j < NBUF && b != &bcache.buf[j])
+        j++;
+      if (j == NBUF || seen[j] || !b->mapped ||
+          cache_hash(b->dev, b->blockno) != i)
+        panic("bcache: invalid bucket chain");
+      seen[j] = 1;
+    }
+  }
+  for (int j = 0; j < NBUF; j++) {
+    struct buf *b = &bcache.buf[j];
+    if (seen[j] != b->mapped)
+      panic("bcache: lost mapping");
+    for (int k = 0; k < j && b->mapped; k++) {
+      struct buf *other = &bcache.buf[k];
+      if (other->mapped && other->dev == b->dev && other->blockno == b->blockno)
+        panic("bcache: duplicate key");
+    }
+  }
+  unlock_all_buckets();
+  release(&bcache.eviction_lock);
+}
+
+#if BCACHE_K01
+void
+bcache_k01_child(void)
+{
+  k01_child_buf = bget_source(ROOTDEV, K01_BLOCK, DEMAND);
+  brelse(k01_child_buf);
+  kexit(0);
+}
+
+void
+bcache_k01(void)
+{
+  int pid = kfork();
+  if (pid < 0)
+    panic("K01: fork");
+  struct buf *b = bget_source(ROOTDEV, K01_BLOCK, DEMAND);
+  brelse(b);
+  if (kwait(0) != pid || k01_arrivals != 2 || k01_allocations != 1 ||
+      k01_rechecks != 1 || b != k01_child_buf || b->refcnt != 0)
+    panic("K01: miss/recheck mismatch");
+  check_mappings();
+  printk("PASS K01: two hart misses, one allocation, one recheck hit\n");
+}
+#endif
+
 // Run once, before fsinit, while no other process uses the cache.
 // Synthetic mappings are tested without issuing disk I/O.
 void
@@ -363,6 +460,19 @@ bcache_selftest(void)
   }
 
   printk("PASS: unpin, reuse and bucket migration\n");
+  check_mappings();
+
+  // Recycle the sole idle buffer again, this time within its current bucket.
+  bunpin(held[0]);
+  b = bget_source(ROOTDEV + 1, base + NB_BUCKET, DEMAND);
+  if (b != held[0])
+    panic("K03: wrong same-bucket victim");
+  bpin(b);
+  brelse(b);
+  if (bget_source(ROOTDEV + 1, base, READ_AHEAD) != 0)
+    panic("K03: stale same-bucket key");
+  check_mappings();
+  printk("PASS K03: same/cross-bucket reuse and mapping invariants\n");
 
   for (int i = 0; i < NBUF; i++)
     bunpin(held[i]);
