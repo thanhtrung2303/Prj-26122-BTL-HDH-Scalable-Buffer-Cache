@@ -407,6 +407,57 @@ bunpin(struct buf *b)
   release(&bcache.bucket[index].lock);
 }
 #if BCACHE_SELFTEST
+
+extern struct superblock sb;
+
+void
+bcache_test_s02(void)
+{
+  struct cache_stats actual;
+  struct cache_stats expected = {0};
+  struct buf *b;
+
+  // Use an on-disk block from the freshly built filesystem image.
+  uint blockno = sb.size - 1;
+  uint index = cache_hash(ROOTDEV, blockno);
+
+  acquire(&bcache.bucket[index].lock);
+  int cached = lookup(index, ROOTDEV, blockno) != 0;
+  release(&bcache.bucket[index].lock);
+  if (cached)
+    panic("S02: expected a cold block");
+
+  bcache_stats_reset();
+
+  b = bread_ra(ROOTDEV, blockno);
+  if (b == 0)
+    panic("S02: bread_ra returned 0");
+  brelse(b);
+
+  expected.read_ahead_lookups = 1;
+  expected.read_ahead_lookup_misses = 1;
+  expected.read_ahead_disk_reads = 1;
+
+  bcache_stats_snapshot(&actual);
+  if (memcmp(&actual, &expected, sizeof(actual)) != 0)
+    panic("S02: wrong counters after bread_ra");
+
+  b = bread(ROOTDEV, blockno);
+  brelse(b);
+
+  expected.demand_lookups = 1;
+  expected.demand_lookup_hits = 1;
+
+  bcache_stats_snapshot(&actual);
+  if (memcmp(&actual, &expected, sizeof(actual)) != 0)
+    panic("S02: wrong counters after bread");
+
+  printk("PASS S02: read-ahead lookup=1 miss=1 disk_reads=1\n");
+  printk("PASS S02: demand lookup=1 hit=1 disk_reads=0\n");
+
+  bcache_stats_reset();
+}
+
 // Called before fsinit, with every buffer pinned and no concurrent cache user.
 static void
 check_stats(void)
