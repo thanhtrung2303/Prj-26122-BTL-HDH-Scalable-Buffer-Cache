@@ -1,0 +1,24 @@
+xv6 kernel is booting
+
+BCACHE SELFTEST starting
+PASS: pinned mappings and repeated lookup
+PASS: read-ahead returns zero when full
+PASS: unpin, reuse and bucket migration
+PASS K03: same/cross-bucket reuse and mapping invariants
+PASS K05: oldest idle buffer across buckets
+PASS K06: timestamp only on final release
+BCACHE SELFTEST PASSED
+PASS K07: waiter protects buffer until final release
+init: starting sh
+$ cachecheck
+PASS: 64 KiB, 3 repeated reads, EOF
+PASS: 4 readers, each reading 64 KiB 3 times
+CACHECHECK PASSED
+$ rwtest
+=== xv6 Read/Write Tests ===
+PASS: basic read/write (4096 bytes)
+PASS: repeated reads (5 times)
+PASS: large file read (65536 bytes)
+PASS: concurrent read (parent + child)
+=== ALL TESTS PASSED ===
+$ QEMU: Terminated
