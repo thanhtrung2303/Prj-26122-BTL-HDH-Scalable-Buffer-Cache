@@ -25,6 +25,9 @@ static struct {
   struct buf buf[NBUF];
 } bcache;
 
+// Each entry is protected by the corresponding bucket lock.
+static struct cache_stats bucket_stats[NB_BUCKET];
+
 static struct spinlock lru_clock_lock;
 static uint64 lru_clock;
 
@@ -129,6 +132,7 @@ binit(void)
   initlock(&bcache.eviction_lock, "bcache.eviction");
   initlock(&lru_clock_lock, "bcache.clock");
   lru_clock = 0;
+  memset(bucket_stats, 0, sizeof(bucket_stats));
 
   for (int i = 0; i < NB_BUCKET; i++) {
     initlock(&bcache.bucket[i].lock, "bcache.bucket");
@@ -175,12 +179,26 @@ k01_after_miss(void)
 }
 #endif
 
+// Caller holds the target bucket lock.
+static void
+record_lookup_hit(struct cache_stats *stats, enum cache_source source)
+{
+  if (source == DEMAND) {
+    stats->demand_lookups++;
+    stats->demand_lookup_hits++;
+  } else {
+    stats->read_ahead_lookups++;
+    stats->read_ahead_lookup_hits++;
+  }
+}
+
 // Success: returns a referenced, sleep-locked buffer.
 // READ_AHEAD may return 0 when no buffer is available.
 static struct buf *
 bget_source(uint dev, uint blockno, enum cache_source source)
 {
   uint index = cache_hash(dev, blockno);
+  struct cache_stats *stats = &bucket_stats[index];
   struct buf *b;
 
   // Fast path: lock only the target bucket.
@@ -189,6 +207,7 @@ bget_source(uint dev, uint blockno, enum cache_source source)
 
   if (b) {
     b->refcnt++;
+    record_lookup_hit(stats, source);
     release(&bcache.bucket[index].lock);
     acquiresleep(&b->lock);
     return b;
@@ -214,10 +233,15 @@ bget_source(uint dev, uint blockno, enum cache_source source)
       k01_rechecks++;
 #endif
     b->refcnt++;
+    record_lookup_hit(stats, source);
   } else {
     b = choose_victim();
 
     if (b == 0) {
+      if (source == READ_AHEAD) {
+        stats->read_ahead_lookups++;
+        stats->read_ahead_skips++;
+      }
       unlock_all_buckets();
       release(&bcache.eviction_lock);
 
@@ -243,6 +267,13 @@ bget_source(uint dev, uint blockno, enum cache_source source)
 
     b->hnext = bcache.bucket[index].head;
     bcache.bucket[index].head = b;
+    if (source == DEMAND) {
+      stats->demand_lookups++;
+      stats->demand_lookup_misses++;
+    } else {
+      stats->read_ahead_lookups++;
+      stats->read_ahead_lookup_misses++;
+    }
   }
 
   unlock_all_buckets();
@@ -261,6 +292,15 @@ bread_source(uint dev, uint blockno, enum cache_source source)
     return 0;
 
   if (!b->valid) {
+    // The held buffer reference keeps the mapping stable.
+    uint index = cache_hash(dev, blockno);
+    acquire(&bcache.bucket[index].lock);
+    if (source == DEMAND)
+      bucket_stats[index].demand_disk_reads++;
+    else
+      bucket_stats[index].read_ahead_disk_reads++;
+    release(&bcache.bucket[index].lock);
+
     virtio_disk_rw(b, 0);
     b->valid = 1;
   }
