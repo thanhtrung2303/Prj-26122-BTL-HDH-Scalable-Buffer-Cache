@@ -103,6 +103,8 @@ extern uint64 sys_link(void);
 extern uint64 sys_mkdir(void);
 extern uint64 sys_close(void);
 extern uint64 sys_sync(void);
+extern uint64 sys_cachestat(void);
+extern uint64 sys_cachereset(void);
 
 // An array mapping syscall numbers from syscall.h
 // to the function that handles the system call.
@@ -130,6 +132,8 @@ static uint64 (*syscalls[])(void) = {
   [SYS_mkdir]   = sys_mkdir,
   [SYS_close]   = sys_close,
   [SYS_sync]    = sys_sync,
+  [SYS_cachestat] = sys_cachestat,
+  [SYS_cachereset] = sys_cachereset,
   // clang-format on
 };
 

@@ -153,6 +153,7 @@ UPROGS=\
 	$U/_sync\
 	$U/_rwtest\
 	$U/_cachecheck\
+	$U/_cache_stat\
 
 fs.img: mkfs/mkfs README $(UPROGS)
 	mkfs/mkfs fs.img README $(UPROGS)
