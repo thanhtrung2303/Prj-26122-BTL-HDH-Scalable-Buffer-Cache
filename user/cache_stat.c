@@ -57,9 +57,13 @@ main(int argc, char *argv[])
   printf("read_ahead_skips: %lu\n", stats.read_ahead_skips);
   printf("read_ahead_disk_reads: %lu\n", stats.read_ahead_disk_reads);
 
-  printf("total_lookups: %lu\n", stats.demand_lookups + stats.read_ahead_lookups);
-  printf("total_disk_reads: %lu\n", stats.demand_disk_reads + stats.read_ahead_disk_reads);
-  print_hit_ratio("demand_hit_ratio", stats.demand_lookup_hits, stats.demand_lookups);
-  print_hit_ratio("read_ahead_hit_ratio", stats.read_ahead_lookup_hits, stats.read_ahead_lookups);
+  printf("total_lookups: %lu\n",
+         stats.demand_lookups + stats.read_ahead_lookups);
+  printf("total_disk_reads: %lu\n",
+         stats.demand_disk_reads + stats.read_ahead_disk_reads);
+  print_hit_ratio("demand_hit_ratio", stats.demand_lookup_hits,
+                  stats.demand_lookups);
+  print_hit_ratio("read_ahead_hit_ratio", stats.read_ahead_lookup_hits,
+                  stats.read_ahead_lookups);
   exit(0);
 }

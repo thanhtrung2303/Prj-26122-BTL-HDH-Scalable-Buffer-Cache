@@ -486,8 +486,9 @@ check_stats(void)
 
   uint64 sum = NB_BUCKET * (NB_BUCKET + 1) / 2;
   const struct cache_stats expected = {
-    3 * sum, sum, 2 * sum, ((uint64)NB_BUCKET << 32) + 4 * sum,
-    18 * sum, 5 * sum, 6 * sum, 7 * sum, 8 * sum,
+    3 * sum,  sum,     2 * sum, ((uint64)NB_BUCKET << 32) + 4 * sum,
+    18 * sum, 5 * sum, 6 * sum, 7 * sum,
+    8 * sum,
   };
   bcache_stats_snapshot(&snapshot);
   bcache_stats_snapshot(&again);
