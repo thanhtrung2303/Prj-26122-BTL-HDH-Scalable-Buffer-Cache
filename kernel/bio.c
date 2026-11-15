@@ -64,6 +64,42 @@ unlock_all_buckets(void)
     release(&bcache.bucket[i].lock);
 }
 
+// out points to kernel memory. Copy to user space only after this returns.
+// Counters describe recorded events; a lookup may still be waiting for I/O.
+void
+bcache_stats_snapshot(struct cache_stats *out)
+{
+  struct cache_stats total = {0};
+
+  lock_all_buckets();
+  for (int i = 0; i < NB_BUCKET; i++) {
+    const struct cache_stats *s = &bucket_stats[i];
+
+    total.demand_lookups += s->demand_lookups;
+    total.demand_lookup_hits += s->demand_lookup_hits;
+    total.demand_lookup_misses += s->demand_lookup_misses;
+    total.demand_disk_reads += s->demand_disk_reads;
+    total.read_ahead_lookups += s->read_ahead_lookups;
+    total.read_ahead_lookup_hits += s->read_ahead_lookup_hits;
+    total.read_ahead_lookup_misses += s->read_ahead_lookup_misses;
+    total.read_ahead_skips += s->read_ahead_skips;
+    total.read_ahead_disk_reads += s->read_ahead_disk_reads;
+  }
+  unlock_all_buckets();
+
+  *out = total;
+}
+
+// Reset counters only, preserving cached data and replacement state.
+// An in-flight request may record its lookup before reset and its I/O after.
+void
+bcache_stats_reset(void)
+{
+  lock_all_buckets();
+  memset(bucket_stats, 0, sizeof(bucket_stats));
+  unlock_all_buckets();
+}
+
 // Caller holds eviction_lock and all bucket locks.
 // Prefer unmapped buffers, then the oldest idle buffer.
 // Equal timestamps retain the lowest array index.
@@ -371,6 +407,62 @@ bunpin(struct buf *b)
   release(&bcache.bucket[index].lock);
 }
 #if BCACHE_SELFTEST
+// Called before fsinit, with every buffer pinned and no concurrent cache user.
+static void
+check_stats(void)
+{
+  struct cache_stats snapshot, again;
+  const struct cache_stats zero = {0};
+  uint64 clock_before = lru_clock;
+
+  // Distinct fields in every bucket catch omitted fields/buckets and narrowing.
+  lock_all_buckets();
+  for (int i = 0; i < NB_BUCKET; i++) {
+    uint64 n = i + 1;
+    bucket_stats[i] = (struct cache_stats){
+      .demand_lookups = 3 * n,
+      .demand_lookup_hits = n,
+      .demand_lookup_misses = 2 * n,
+      .demand_disk_reads = (1ULL << 32) + 4 * n,
+      .read_ahead_lookups = 18 * n,
+      .read_ahead_lookup_hits = 5 * n,
+      .read_ahead_lookup_misses = 6 * n,
+      .read_ahead_skips = 7 * n,
+      .read_ahead_disk_reads = 8 * n,
+    };
+  }
+  unlock_all_buckets();
+
+  uint64 sum = NB_BUCKET * (NB_BUCKET + 1) / 2;
+  const struct cache_stats expected = {
+    3 * sum, sum, 2 * sum, ((uint64)NB_BUCKET << 32) + 4 * sum,
+    18 * sum, 5 * sum, 6 * sum, 7 * sum, 8 * sum,
+  };
+  bcache_stats_snapshot(&snapshot);
+  bcache_stats_snapshot(&again);
+  if (memcmp(&snapshot, &expected, sizeof(snapshot)) != 0 ||
+      memcmp(&snapshot, &again, sizeof(snapshot)) != 0)
+    panic("stats: snapshot aggregation");
+
+  bcache_stats_reset();
+  bcache_stats_snapshot(&snapshot);
+  if (memcmp(&snapshot, &zero, sizeof(snapshot)) != 0)
+    panic("stats: reset counters");
+  bcache_stats_reset();
+  bcache_stats_snapshot(&again);
+  if (memcmp(&again, &zero, sizeof(again)) != 0)
+    panic("stats: repeated reset");
+
+  if (lru_clock != clock_before)
+    panic("stats: reset clock");
+  for (int i = 0; i < NBUF; i++) {
+    struct buf *b = &bcache.buf[i];
+    if (!b->mapped || b->valid || b->refcnt != 1 || b->lastuse == 0)
+      panic("stats: reset cache state");
+  }
+  printk("PASS: stats snapshot aggregation and counter-only reset\n");
+}
+
 // Check both representations while mappings are stable. A repeated pointer
 // also catches a cycle before following the same link a second time.
 static void
@@ -449,6 +541,7 @@ bcache_selftest(void)
   }
 
   // A hit must reuse the existing mapping, even with no idle buffer.
+  check_stats();
   for (int i = 0; i < NBUF; i++) {
     b = bget_source(ROOTDEV, base + i, DEMAND);
 
