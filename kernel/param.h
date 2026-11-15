@@ -18,3 +18,5 @@
 #define READ_AHEAD_BLOCKS  2
 
 #define BCACHE_SELFTEST 0
+// Enable with BCACHE_SELFTEST on boots with at least two harts.
+#define BCACHE_K01 0
