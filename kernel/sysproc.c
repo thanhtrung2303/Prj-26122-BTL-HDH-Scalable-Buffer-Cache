@@ -6,6 +6,7 @@
 #include "spinlock.h"
 #include "proc.h"
 #include "vm.h"
+#include "cache_stats.h"
 
 uint64
 sys_exit(void)
@@ -109,4 +110,26 @@ sys_uptime(void)
   xticks = ticks;
   release(&tickslock);
   return xticks;
+}
+
+uint64
+sys_cachestat(void)
+{
+  uint64 addr;
+  struct cache_stats stats;
+  struct proc *p = myproc();
+
+  argaddr(0, &addr);
+  if (addr == 0 || addr >= p->sz || sizeof(stats) > p->sz - addr)
+    return -1;
+
+  bcache_stats_snapshot(&stats);
+  return copyout(p->pagetable, p->sz, addr, (char *)&stats, sizeof(stats));
+}
+
+uint64
+sys_cachereset(void)
+{
+  bcache_stats_reset();
+  return 0;
 }

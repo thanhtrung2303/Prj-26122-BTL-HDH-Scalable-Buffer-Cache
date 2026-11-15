@@ -25,6 +25,9 @@ static struct {
   struct buf buf[NBUF];
 } bcache;
 
+// Each entry is protected by the corresponding bucket lock.
+static struct cache_stats bucket_stats[NB_BUCKET];
+
 static struct spinlock lru_clock_lock;
 static uint64 lru_clock;
 
@@ -59,6 +62,42 @@ unlock_all_buckets(void)
 {
   for (int i = NB_BUCKET - 1; i >= 0; i--)
     release(&bcache.bucket[i].lock);
+}
+
+// out points to kernel memory. Copy to user space only after this returns.
+// Counters describe recorded events; a lookup may still be waiting for I/O.
+void
+bcache_stats_snapshot(struct cache_stats *out)
+{
+  struct cache_stats total = {0};
+
+  lock_all_buckets();
+  for (int i = 0; i < NB_BUCKET; i++) {
+    const struct cache_stats *s = &bucket_stats[i];
+
+    total.demand_lookups += s->demand_lookups;
+    total.demand_lookup_hits += s->demand_lookup_hits;
+    total.demand_lookup_misses += s->demand_lookup_misses;
+    total.demand_disk_reads += s->demand_disk_reads;
+    total.read_ahead_lookups += s->read_ahead_lookups;
+    total.read_ahead_lookup_hits += s->read_ahead_lookup_hits;
+    total.read_ahead_lookup_misses += s->read_ahead_lookup_misses;
+    total.read_ahead_skips += s->read_ahead_skips;
+    total.read_ahead_disk_reads += s->read_ahead_disk_reads;
+  }
+  unlock_all_buckets();
+
+  *out = total;
+}
+
+// Reset counters only, preserving cached data and replacement state.
+// An in-flight request may record its lookup before reset and its I/O after.
+void
+bcache_stats_reset(void)
+{
+  lock_all_buckets();
+  memset(bucket_stats, 0, sizeof(bucket_stats));
+  unlock_all_buckets();
 }
 
 // Caller holds eviction_lock and all bucket locks.
@@ -129,6 +168,7 @@ binit(void)
   initlock(&bcache.eviction_lock, "bcache.eviction");
   initlock(&lru_clock_lock, "bcache.clock");
   lru_clock = 0;
+  memset(bucket_stats, 0, sizeof(bucket_stats));
 
   for (int i = 0; i < NB_BUCKET; i++) {
     initlock(&bcache.bucket[i].lock, "bcache.bucket");
@@ -175,12 +215,26 @@ k01_after_miss(void)
 }
 #endif
 
+// Caller holds the target bucket lock.
+static void
+record_lookup_hit(struct cache_stats *stats, enum cache_source source)
+{
+  if (source == DEMAND) {
+    stats->demand_lookups++;
+    stats->demand_lookup_hits++;
+  } else {
+    stats->read_ahead_lookups++;
+    stats->read_ahead_lookup_hits++;
+  }
+}
+
 // Success: returns a referenced, sleep-locked buffer.
 // READ_AHEAD may return 0 when no buffer is available.
 static struct buf *
 bget_source(uint dev, uint blockno, enum cache_source source)
 {
   uint index = cache_hash(dev, blockno);
+  struct cache_stats *stats = &bucket_stats[index];
   struct buf *b;
 
   // Fast path: lock only the target bucket.
@@ -189,6 +243,7 @@ bget_source(uint dev, uint blockno, enum cache_source source)
 
   if (b) {
     b->refcnt++;
+    record_lookup_hit(stats, source);
     release(&bcache.bucket[index].lock);
     acquiresleep(&b->lock);
     return b;
@@ -214,10 +269,15 @@ bget_source(uint dev, uint blockno, enum cache_source source)
       k01_rechecks++;
 #endif
     b->refcnt++;
+    record_lookup_hit(stats, source);
   } else {
     b = choose_victim();
 
     if (b == 0) {
+      if (source == READ_AHEAD) {
+        stats->read_ahead_lookups++;
+        stats->read_ahead_skips++;
+      }
       unlock_all_buckets();
       release(&bcache.eviction_lock);
 
@@ -243,6 +303,13 @@ bget_source(uint dev, uint blockno, enum cache_source source)
 
     b->hnext = bcache.bucket[index].head;
     bcache.bucket[index].head = b;
+    if (source == DEMAND) {
+      stats->demand_lookups++;
+      stats->demand_lookup_misses++;
+    } else {
+      stats->read_ahead_lookups++;
+      stats->read_ahead_lookup_misses++;
+    }
   }
 
   unlock_all_buckets();
@@ -261,6 +328,15 @@ bread_source(uint dev, uint blockno, enum cache_source source)
     return 0;
 
   if (!b->valid) {
+    // The held buffer reference keeps the mapping stable.
+    uint index = cache_hash(dev, blockno);
+    acquire(&bcache.bucket[index].lock);
+    if (source == DEMAND)
+      bucket_stats[index].demand_disk_reads++;
+    else
+      bucket_stats[index].read_ahead_disk_reads++;
+    release(&bcache.bucket[index].lock);
+
     virtio_disk_rw(b, 0);
     b->valid = 1;
   }
@@ -331,6 +407,115 @@ bunpin(struct buf *b)
   release(&bcache.bucket[index].lock);
 }
 #if BCACHE_SELFTEST
+
+extern struct superblock sb;
+
+void
+bcache_test_s02(void)
+{
+  struct cache_stats actual;
+  struct cache_stats expected = {0};
+  struct buf *b;
+
+  // Use an on-disk block from the freshly built filesystem image.
+  uint blockno = sb.size - 1;
+  uint index = cache_hash(ROOTDEV, blockno);
+
+  acquire(&bcache.bucket[index].lock);
+  int cached = lookup(index, ROOTDEV, blockno) != 0;
+  release(&bcache.bucket[index].lock);
+  if (cached)
+    panic("S02: expected a cold block");
+
+  bcache_stats_reset();
+
+  b = bread_ra(ROOTDEV, blockno);
+  if (b == 0)
+    panic("S02: bread_ra returned 0");
+  brelse(b);
+
+  expected.read_ahead_lookups = 1;
+  expected.read_ahead_lookup_misses = 1;
+  expected.read_ahead_disk_reads = 1;
+
+  bcache_stats_snapshot(&actual);
+  if (memcmp(&actual, &expected, sizeof(actual)) != 0)
+    panic("S02: wrong counters after bread_ra");
+
+  b = bread(ROOTDEV, blockno);
+  brelse(b);
+
+  expected.demand_lookups = 1;
+  expected.demand_lookup_hits = 1;
+
+  bcache_stats_snapshot(&actual);
+  if (memcmp(&actual, &expected, sizeof(actual)) != 0)
+    panic("S02: wrong counters after bread");
+
+  printk("PASS S02: read-ahead lookup=1 miss=1 disk_reads=1\n");
+  printk("PASS S02: demand lookup=1 hit=1 disk_reads=0\n");
+
+  bcache_stats_reset();
+}
+
+// Called before fsinit, with every buffer pinned and no concurrent cache user.
+static void
+check_stats(void)
+{
+  struct cache_stats snapshot, again;
+  const struct cache_stats zero = {0};
+  uint64 clock_before = lru_clock;
+
+  // Distinct fields in every bucket catch omitted fields/buckets and narrowing.
+  lock_all_buckets();
+  for (int i = 0; i < NB_BUCKET; i++) {
+    uint64 n = i + 1;
+    bucket_stats[i] = (struct cache_stats){
+      .demand_lookups = 3 * n,
+      .demand_lookup_hits = n,
+      .demand_lookup_misses = 2 * n,
+      .demand_disk_reads = (1ULL << 32) + 4 * n,
+      .read_ahead_lookups = 18 * n,
+      .read_ahead_lookup_hits = 5 * n,
+      .read_ahead_lookup_misses = 6 * n,
+      .read_ahead_skips = 7 * n,
+      .read_ahead_disk_reads = 8 * n,
+    };
+  }
+  unlock_all_buckets();
+
+  uint64 sum = NB_BUCKET * (NB_BUCKET + 1) / 2;
+  const struct cache_stats expected = {
+    3 * sum,  sum,     2 * sum, ((uint64)NB_BUCKET << 32) + 4 * sum,
+    18 * sum, 5 * sum, 6 * sum, 7 * sum,
+    8 * sum,
+  };
+  bcache_stats_snapshot(&snapshot);
+  bcache_stats_snapshot(&again);
+  if (memcmp(&snapshot, &expected, sizeof(snapshot)) != 0 ||
+      memcmp(&snapshot, &again, sizeof(snapshot)) != 0)
+    panic("stats: snapshot aggregation");
+
+  bcache_stats_reset();
+  bcache_stats_snapshot(&snapshot);
+  if (memcmp(&snapshot, &zero, sizeof(snapshot)) != 0)
+    panic("stats: reset counters");
+  bcache_stats_reset();
+  bcache_stats_snapshot(&again);
+  if (memcmp(&again, &zero, sizeof(again)) != 0)
+    panic("stats: repeated reset");
+
+  if (lru_clock != clock_before)
+    panic("stats: reset clock");
+  for (int i = 0; i < NBUF; i++) {
+    struct buf *b = &bcache.buf[i];
+    // Fixture references went 1 -> 2 -> 1, so lastuse must still be zero.
+    if (!b->mapped || b->valid || b->refcnt != 1 || b->lastuse != 0)
+      panic("stats: reset cache state");
+  }
+  printk("PASS: stats snapshot aggregation and counter-only reset\n");
+}
+
 // Check both representations while mappings are stable. A repeated pointer
 // also catches a cycle before following the same link a second time.
 static void
@@ -409,6 +594,7 @@ bcache_selftest(void)
   }
 
   // A hit must reuse the existing mapping, even with no idle buffer.
+  check_stats();
   for (int i = 0; i < NBUF; i++) {
     b = bget_source(ROOTDEV, base + i, DEMAND);
 

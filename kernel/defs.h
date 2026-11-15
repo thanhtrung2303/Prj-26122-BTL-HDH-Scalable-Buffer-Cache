@@ -1,5 +1,6 @@
 // clang-format off
 struct buf;
+struct cache_stats;
 struct context;
 struct file;
 struct inode;
@@ -12,11 +13,14 @@ struct superblock;
 
 // bio.c
 void            binit(void);
+void            bcache_stats_snapshot(struct cache_stats*);
+void            bcache_stats_reset(void);
 struct buf*     bread(uint, uint);
 struct buf*     bread_ra(uint, uint);
 void            bcache_selftest(void);
 void            bcache_k01(void);
 void            bcache_k01_child(void);
+void            bcache_test_s02(void);
 void            bcache_k07(void);
 void            bcache_k07_child(void);
 int             bcache_k07_sleeping(int, void *);

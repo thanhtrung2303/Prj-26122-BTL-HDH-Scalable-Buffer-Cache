@@ -562,6 +562,7 @@ forkret(void)
     fsinit(ROOTDEV);
 
 #if BCACHE_SELFTEST
+    bcache_test_s02();
 #if BCACHE_K01
     __atomic_store_n(&k01_running, 1, __ATOMIC_RELEASE);
     bcache_k01();
