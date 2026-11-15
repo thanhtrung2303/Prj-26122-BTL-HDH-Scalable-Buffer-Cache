@@ -457,7 +457,8 @@ check_stats(void)
     panic("stats: reset clock");
   for (int i = 0; i < NBUF; i++) {
     struct buf *b = &bcache.buf[i];
-    if (!b->mapped || b->valid || b->refcnt != 1 || b->lastuse == 0)
+    // Fixture references went 1 -> 2 -> 1, so lastuse must still be zero.
+    if (!b->mapped || b->valid || b->refcnt != 1 || b->lastuse != 0)
       panic("stats: reset cache state");
   }
   printk("PASS: stats snapshot aggregation and counter-only reset\n");
