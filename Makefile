@@ -152,7 +152,11 @@ UPROGS=\
 	$U/_dorphan\
 	$U/_sync\
 	$U/_rwtest\
+<<<<<<< HEAD
 	$U/_cachecheck\
+=======
+	$U/_d03test
+>>>>>>> 2c77909 (test: add D03 concurrent read tests)
 
 fs.img: mkfs/mkfs README $(UPROGS)
 	mkfs/mkfs fs.img README $(UPROGS)
