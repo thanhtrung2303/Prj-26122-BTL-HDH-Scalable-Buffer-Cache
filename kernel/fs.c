@@ -483,7 +483,9 @@ bmap_lookup_ra(struct inode *ip, uint bn)
   if (addr == 0)
     return 0;
 
-  bp = bread(ip->dev, addr);
+  bp = bread_ra(ip->dev, addr);
+  if (bp == 0)
+    return 0;
   a = (uint *)bp->data;
   addr = a[bn];
   brelse(bp);
@@ -653,7 +655,9 @@ readi_ra(struct inode *ip, int user_dst, uint64 dst, uint off, uint n,
         if (ra_addr == 0)
           break;
 
-        bp = bread(ip->dev, ra_addr);
+        bp = bread_ra(ip->dev, ra_addr);
+        if (bp == 0)
+          break;
         brelse(bp);
       }
     }

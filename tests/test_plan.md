@@ -1,8 +1,8 @@
 # Ma trận kiểm thử và nghiệm thu
 
 - Phạm vi: hash bucket + timestamp LRU + cache statistics + sequential read-ahead.
-- Trạng thái ban đầu của toàn bộ ca trong tài liệu: CHƯA CHẠY.
-- Các chương trình/test hook mới dưới đây là yêu cầu cần triển khai, không phải lệnh hiện đã có trong repo.
+- Ma trận rút gọn còn 21 ca. Kết quả đã chạy và phần còn thiếu được ghi tại mục 9.
+- Tái sử dụng `rwtest`, `cachecheck` và self-test hiện có. Các kịch bản còn thiếu và bộ đo hiệu năng được bổ sung theo từng ca.
 
 ## 1. Cấu hình và nguyên tắc chung
 
@@ -41,26 +41,17 @@ usertests
 stressfs
 ```
 
-Sau khi triển khai chương trình test và thống kê, đăng ký vào UPROGS để chạy các lệnh ở mục 2. Kết quả PASS yêu cầu kiểm tra nội dung/điều kiện thực tế, không chỉ in chuỗi cố định.
+Đăng ký vào UPROGS nếu bổ sung chương trình test mới ở mục 2. Kết quả PASS yêu cầu kiểm tra nội dung/điều kiện thực tế, không chỉ in chuỗi cố định.
 
-## 2. Công cụ kiểm thử cần bổ sung
+## 2. Công cụ kiểm thử
 
-### 2.1. User test: cache_test
+### 2.1. User test: rwtest và cachecheck
 
-Hải phụ trách user/cache_test.c, đăng ký trong Makefile. Giao diện đích:
+Dùng `rwtest` của Hải cho ca ghi–đọc B04. Dùng `cachecheck` của Quang cho đọc lặp, file vượt cache, đọc đồng thời và kiểm tra EOF hiện có. Mở rộng hoặc bổ sung kịch bản cho phần còn thiếu của D03, D04, D07 và D08. Cả hai lệnh đã đăng ký trong UPROGS:
 
 ```sh
-cache_test rw
-cache_test repeat
-cache_test capacity
-cache_test concurrent
-cache_test sequential
-cache_test partial
-cache_test large-read
-cache_test eof
-cache_test indirect
-cache_test independent-open
-cache_test shared-file
+rwtest
+cachecheck
 ```
 
 Mỗi ca tạo dữ liệu xác định bằng vị trí, ví dụ byte thứ i là `(i * 17 + 3) % 251`, kiểm tra mọi giá trị trả về của open/read/write/fork/wait, so sánh từng byte và số byte, phát hiện EOF đúng vị trí. Không chỉ dùng toàn byte 0 vì dễ bỏ sót lỗi ánh xạ.
@@ -88,7 +79,7 @@ Trung phụ trách cache_stat và syscall theo integration.md. Đối với số
 | B01 | Build sạch, boot đến shell với 1 và 3 CPU | Build không lỗi, shell nhận lệnh, ghi đủ môi trường/SHA | B0/C0/C1 | Cả nhóm trên máy mình | Build + boot log riêng từng người |
 | B02 | Chạy usertests đến kết thúc | Có ALL TESTS PASSED; mọi lỗi được đối chiếu test thay vì bỏ qua tùy ý | B0/C0/C1, 1/3 CPU | Quang | Raw log, kết quả tổng hợp |
 | B03 | Chạy stressfs | Hoàn tất, trở lại shell, không panic/treo | B0/C0/C1, 3 CPU | Quang | Raw log; không coi đây là test so sánh nội dung |
-| B04 | cache_test rw | Ghi, đóng/mở lại, đọc và so sánh toàn bộ dữ liệu; EOF đúng | B0/C0/C1 | Hải | Source, đăng ký UPROGS, log |
+| B04 | rwtest: ghi–đọc 4.096 byte | Ghi, đóng/mở lại, đọc và so sánh toàn bộ dữ liệu; EOF đúng | B0/C0/C1 | Hải | Source, đăng ký UPROGS, log |
 
 B04 là đầu ra test ghi–đọc bắt buộc của Hải cho tuần 2. Log baseline của Quang không thay thế log chạy test mới này.
 
@@ -96,18 +87,14 @@ B04 là đầu ra test ghi–đọc bắt buộc của Hải cho tuần 2. Log b
 
 | ID | Cách thực hiện | Tiêu chí đạt | Cấu hình | Người chính |
 |---|---|---|---|---|
-| D01 | cache_test repeat: đọc cùng file nhiều lượt | Mọi byte/số byte đúng; không suy ra hit tuyệt đối vì có metadata/nhiễu | B0/C0/C1 | Hải |
-| D02 | cache_test capacity: file dữ liệu lớn hơn cache | Đọc đủ và đúng sau nhiều lần thay thế; không panic/rò tham chiếu | B0/C0/C1 | Hải |
-| D03 | cache_test concurrent: nhiều con đọc chung và file riêng, lặp 20 vòng | Mọi con trả thành công; không sai dữ liệu hoặc treo | B0/C0/C1, 3 CPU | Hải |
-| D04 | cache_test sequential: đọc theo BSIZE | Dữ liệu đúng ở cả ON/OFF | B0/C0/C1 | Hải |
-| D05 | cache_test partial: đọc 127 byte/lần, gồm đoạn cắt qua ranh giới block | Không mất/lặp byte; đọc nhiều lần trong một block không bị tính thành hai block chuỗi | C0/C1, đối chiếu B0 về dữ liệu | Hải |
-| D06 | cache_test large-read: một read nhiều block | Dữ liệu đúng; C1 phát hiện tuần tự trong cùng một read | B0/C0/C1 | Hải |
-| D07 | cache_test eof: file 0 byte, BSIZE-1, BSIZE, BSIZE+1; đọc tiếp sau EOF | Số byte đúng; không nạp block ngoài file; không tạo địa chỉ đĩa mới | B0/C0/C1 | Hải |
-| D08 | cache_test indirect: file qua NDIRECT | Dữ liệu qua direct/indirect đúng; đọc trước không gọi cấp phát block | B0/C0/C1 | Hải |
-| D09 | cache_test independent-open: mở cùng inode hai lần, xen kẽ đọc | Hai offset/lịch sử độc lập; dữ liệu mỗi luồng đúng | B0/C0/C1 | Hải |
-| D10 | cache_test shared-file: dup rồi fork, chia sẻ file description | Không trùng/mất vùng đọc do offset; gộp kết quả con để kiểm tra toàn bộ vùng đã đọc | B0/C0/C1 | Hải |
+| D01 | cachecheck: đọc cùng file nhiều lượt | Mọi byte/số byte đúng; không suy ra hit tuyệt đối vì có metadata/nhiễu | B0/C0/C1 | Hải |
+| D02 | cachecheck: file dữ liệu lớn hơn cache | Đọc đủ và đúng sau nhiều lần thay thế; không panic/rò tham chiếu | B0/C0/C1 | Hải |
+| D03 | Mở rộng cachecheck: nhiều con đọc chung và file riêng, lặp 20 vòng | Mọi con trả thành công; không sai dữ liệu hoặc treo | B0/C0/C1, 3 CPU | Hải |
+| D04 | Đọc tuần tự: đọc theo BSIZE | Dữ liệu đúng ở cả ON/OFF | B0/C0/C1 | Hải |
+| D07 | Kiểm tra EOF: file 0 byte, BSIZE-1, BSIZE, BSIZE+1; đọc tiếp sau EOF | Số byte đúng; không nạp block ngoài file; không tạo địa chỉ đĩa mới | B0/C0/C1 | Hải |
+| D08 | Kiểm tra indirect: file qua NDIRECT | Dữ liệu qua direct/indirect đúng; đọc trước không gọi cấp phát block | B0/C0/C1 | Hải |
 
-Kiểm tra kích hoạt/không cấp phát ở D05–D08 cần hook trace hoặc kiểm tra kernel; chỉ nhìn output dữ liệu user không đủ chứng minh thuật toán bên trong. Với D10, dùng dữ liệu có ID block và cơ chế tập hợp kết quả để kiểm tra tập vùng đã đọc; không mặc định tiến trình nào nhận block cụ thể.
+Kiểm tra read-ahead ở EOF và vùng indirect trong D07–D08 cần trace hoặc kiểm tra kernel để xác nhận đường tra ánh xạ và nạp block.
 
 ## 5. Hash bucket, đồng bộ và LRU
 
@@ -116,32 +103,19 @@ Các ca dưới là kernel test có kiểm soát, chạy C0 và C1, CPUS=3.
 | ID | Cách thực hiện | Tiêu chí đạt | Người chính |
 |---|---|---|---|
 | K01 | Buộc hai bên cùng trượt lần tìm đầu cho một khóa, đồng bộ trước đường miss | Chỉ một ánh xạ; một cấp phát miss, bên tìm lại trúng được tính hit | Quang |
-| K02 | Yêu cầu các khóa khác nhau có cùng cache_hash | Dữ liệu/định danh không lẫn; so sánh cả dev và blockno | Quang |
 | K03 | Ép nạn nhân ở cùng bucket và ở bucket khác | Hnext không vòng, không mất buffer; mỗi mapped xuất hiện đúng một lần | Quang |
-| K04 | Còn buffer chưa mapped cùng các buffer mapped rảnh | Ưu tiên chưa mapped, phá hòa theo chỉ số mảng | Quang |
 | K05 | Tạo hai buffer rảnh ở hai bucket, lastuse=100 và 30 trong fixture kiểm soát | Chọn timestamp 30 dù bucket của nó có chỉ số lớn hơn | Trung |
 | K06 | Lấy buffer, pin; brelse từ 2 về 1; bunpin từ 1 về 0 | Chưa cập nhật ở 2→1; cập nhật lastuse ở 1→0; không chọn khi còn pin | Trung |
 | K07 | Nhiều bên giữ/chờ cùng buffer | Refcnt tính cả bên chờ; chỉ lần về 0 cấp timestamp mới | Trung |
-| K08 | Dựng hai timestamp bằng nhau trong fixture | Chọn chỉ số mảng nhỏ hơn; fixture sửa metadata dưới khóa, không ở bản production | Trung |
 | K09 | Giữ mọi buffer trong harness, yêu cầu bread_ra cho khóa chưa có | Trả 0, một skip, không panic vì thiếu buffer, không rò khóa/refcnt | Quang |
-| K10 | Xen kẽ miss, release/unpin, snapshot/reset trong 20 vòng đồng thời | Không deadlock, cấu trúc/refcnt hợp lệ sau mỗi vòng; watchdog phát hiện treo | Quang + Trung |
 
-Fixture không tự sửa metadata khi tiến trình khác đang dùng cache. K09 phải nhả các buffer trước khi cho hoạt động nền tiếp tục. K10 cần thời hạn watchdog ghi trước trong log; quá hạn là TIMEOUT, không được ghi PASS.
+Fixture không tự sửa metadata khi tiến trình khác đang dùng cache. K09 phải nhả các buffer trước khi cho hoạt động nền tiếp tục.
 
 ## 6. Phát hiện tuần tự và đọc trước
 
 | ID | Cách thực hiện | Tiêu chí đạt | Người chính |
 |---|---|---|---|
-| R01 | Trace đọc block 4 rồi 5 đến ranh giới | Chưa kích hoạt sau block 4; sau block 5 xét 6 rồi 7 | Hải |
-| R02 | Trace nhiều phần nhỏ trong cùng block và read lớn qua nhiều block | Không tăng sai ra_seq_blocks; vẫn kích hoạt trong một read lớn | Hải |
-| R03 | Fixture gọi đường đọc có state tại offset không liên tục | Reset chuỗi; không kích hoạt dựa trên lịch sử cũ | Hải |
-| R04 | Chạy hết file, read lỗi/0 byte và ghi qua cùng file description | Reset theo đặc tả; read 0 byte không tạo chuỗi mới; lỗi read-ahead không đổi kết quả demand thành lỗi | Hải |
-| R05 | Cho block mục tiêu đã valid hoặc đang được bên khác nạp | Tái sử dụng ánh xạ, chỉ một I/O cho lần nạp; giải phóng đủ tham chiếu | Hải + Quang |
-| R06 | Đi qua indirect, cuối file và thiếu địa chỉ block trong fixture | Không balloc/ghi bảng ánh xạ do đọc trước; metadata RA mang đúng nguồn | Hải |
-| R07 | Thiếu buffer khi tra metadata và khi lấy dữ liệu đọc trước | Dừng cửa sổ, không rò buffer metadata; demand đã thành công vẫn được trả | Hải + Quang |
 | R08 | Cùng workload trên C0/C1, thu trace source | C0 không phát READ_AHEAD; C1 chỉ xét tối đa 2 block dữ liệu mỗi lần kích hoạt | Hải |
-
-R03 không yêu cầu lseek ở user space vì xv6 nền không có giao diện đó. R06 không giả định xv6 hỗ trợ tạo sparse file bằng lệnh user; dùng fixture nội bộ nếu cần xét địa chỉ 0.
 
 ## 7. Bộ đếm, snapshot và reset
 
@@ -149,17 +123,7 @@ Trung phụ trách; Hải đọc chéo nhãn nguồn. Dùng fixture kernel kiể
 
 | ID | Cách thực hiện | Tiêu chí đạt |
 |---|---|---|
-| S01 | Demand cấp phát X, đọc xong rồi demand lại X | Một miss, một hit cho hai lookup; chỉ một disk read nếu fixture bắt đầu lạnh và không có bên khác |
 | S02 | bread_ra nạp Y rồi demand Y | RA miss/RA disk read; demand hit; không đổi demand thành nguồn RA |
-| S03 | Tìm nhanh trượt, tìm lại có ánh xạ | Một lookup hit, không tăng thêm miss |
-| S04 | Ánh xạ có valid==0, tranh sleeplock | Hit vẫn hợp lệ; I/O tính cho đúng bên thực sự phát lệnh; không đếm đôi |
-| S05 | Read-ahead không có buffer | RA lookup +1, skip +1; miss và disk read cho khóa bị bỏ không tăng |
-| S06 | RA đọc indirect metadata | Lookup/I/O metadata thuộc READ_AHEAD; không ghi vào demand |
-| S07 | Gọi bwrite cho buffer đã chuẩn bị | Không tăng disk_reads chỉ vì lệnh ghi |
-| S08 | Snapshot/reset đồng thời với lookup | Luôn giữ hai đẳng thức tổng ở dưới; không copyout khi giữ spinlock |
-| S09 | Reset trong fixture có I/O đang chạy | Không hủy I/O; chấp nhận lookup/I/O rơi vào hai khoảng; không diễn giải sai thành yêu cầu trọn vẹn |
-| S10 | cachereset và cachestat với địa chỉ hợp lệ/không hợp lệ | Kết quả syscall đúng; reset không đổi dữ liệu, LRU hoặc lru_clock; con trỏ sai trả -1 |
-| S11 | Chạy cache_stat và cache_stat reset trong shell | In đủ chỉ số, tỷ lệ/N/A đúng, phát hiện lỗi syscall; không đòi số 0 tuyệt đối khi có nhiễu sau reset |
 
 Đẳng thức:
 
@@ -177,9 +141,8 @@ Quang chạy workload, Trung tổng hợp thống kê, Hải kiểm tra dữ li�
 
 | ID | So sánh | Cách chạy | Số liệu |
 |---|---|---|---|
-| P01 | B0 với C0 | Cùng workload concurrent, cùng 1/3 CPU và dữ liệu | Thời gian, tính đúng dữ liệu, số CPU; không dùng chênh lệch thời gian đơn lẻ để khẳng định giảm contention |
-| P02 | C0 với C1 | Đọc tuần tự cùng file vượt cache | Thời gian, demand/RA/total disk_reads, lookup hit/miss/skip |
-| P03 | C0 với C1 | Đọc lặp, file ngắn/EOF, concurrent | Thời gian, dữ liệu đúng, overhead/skip và tổng I/O |
+| P01 | B0 với C0 | Cùng workload concurrent, cùng 1/3 CPU và dữ liệu | Thời gian, throughput (MiB/s hoặc thao tác/giây), tính đúng dữ liệu, số CPU; không dùng chênh lệch thời gian đơn lẻ để khẳng định giảm contention |
+| P02 | C0 với C1 | Đọc tuần tự cùng file vượt cache | Thời gian, throughput đọc (MiB/s), demand/RA/total disk_reads, lookup hit/miss/skip |
 | P04 | Khóa cache ở B0/C0 | Bản đo riêng có instrumentation thử lấy khóa thất bại cho khóa cache | Tổng số vòng thử lấy khóa thất bại và số lần acquire, ghi riêng bucket/eviction/lru_clock |
 
 Đo thời gian bằng uptime theo tick ở test user hoặc đồng hồ host của harness; ghi phương pháp và đơn vị, không gọi tick là millisecond nếu chưa xác định chu kỳ timer của commit. Nếu fixture quá ngắn, tăng số vòng để tránh độ phân giải tick chi phối.
@@ -189,6 +152,8 @@ P04 là công cụ đo cần bổ sung ở bản thử nghiệm, không nằm tr
 Reset thống kê không làm cache lạnh. Tách lượt cold-cache (boot lại, chuẩn bị đầu vào như nhau) và warm-cache (chạy trước một lượt, ghi rõ). User program/shell tạo thêm I/O; thống kê là toàn hệ thống. Không khẳng định RA đồng bộ tăng tốc nếu tổng thời gian không cải thiện.
 
 Không đặt ngưỡng cải thiện phần trăm khi chưa có yêu cầu giảng viên; nếu cần chứng minh mục tiêu hiệu năng, nhóm phải chốt workload và ngưỡng trước khi nghiệm thu, không chọn ngưỡng sau khi thấy kết quả.
+
+Demo gồm P04 (tranh chấp khóa trước/sau, B0/C0) và P02 (tốc độ đọc tuần tự khi tắt/bật read-ahead, C0/C1). P01 cung cấp kết quả throughput khi chạy đồng thời.
 
 ## 9. Lưu minh chứng
 
@@ -205,3 +170,11 @@ Mỗi log có SHA đầy đủ, tình trạng working tree, cấu hình B0/C0/C1
 
 Summary ghi: ID, người chạy, kết quả PASS/FAIL/TIMEOUT/CHƯA CHẠY, link log, lỗi/issue liên quan và người xử lý. Ảnh chỉ bổ sung, raw log là minh chứng chính. Lưu cả log thất bại; không xóa lỗi rồi ghi lại PASS cho cùng lượt.
 
+Minh chứng tuần 3:
+
+- B01–B04, D01–D02 có minh chứng trên các phiên bản đã chạy. Chạy lại trên cùng SHA của bản tích hợp.
+- K05–K07 có log PASS với 3 CPU và self-test bật.
+- D03 đã chạy đọc chung file, còn thiếu file riêng và 20 vòng. D07 đã kiểm tra EOF với file 64 KiB, còn thiếu các kích thước biên và kiểm tra đường đọc trước. K03 đã kiểm tra chuyển bucket, còn thiếu trường hợp trong cùng bucket và kiểm tra cấu trúc danh sách. K09 đã kiểm tra `bread_ra()` trả 0 khi cache đầy, còn thiếu kiểm tra bộ đếm skip.
+- R08 có ghi nhận debug kích hoạt đọc trước trong PR #11, còn thiếu cặp trace C0/C1. K01 vẫn cần ca ép hai CPU cùng miss.
+
+Nguồn: [minh chứng Quang](../results/week03/quang/summary.md), [minh chứng Trung](../results/week03/trung/summary.md), [minh chứng Hải](https://github.com/thanhtrung2303/Prj-26122-BTL-HDH-Scalable-Buffer-Cache/pull/11).

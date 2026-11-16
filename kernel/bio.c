@@ -25,6 +25,9 @@ static struct {
   struct buf buf[NBUF];
 } bcache;
 
+// Each entry is protected by the corresponding bucket lock.
+static struct cache_stats bucket_stats[NB_BUCKET];
+
 static struct spinlock lru_clock_lock;
 static uint64 lru_clock;
 
@@ -59,6 +62,42 @@ unlock_all_buckets(void)
 {
   for (int i = NB_BUCKET - 1; i >= 0; i--)
     release(&bcache.bucket[i].lock);
+}
+
+// out points to kernel memory. Copy to user space only after this returns.
+// Counters describe recorded events; a lookup may still be waiting for I/O.
+void
+bcache_stats_snapshot(struct cache_stats *out)
+{
+  struct cache_stats total = {0};
+
+  lock_all_buckets();
+  for (int i = 0; i < NB_BUCKET; i++) {
+    const struct cache_stats *s = &bucket_stats[i];
+
+    total.demand_lookups += s->demand_lookups;
+    total.demand_lookup_hits += s->demand_lookup_hits;
+    total.demand_lookup_misses += s->demand_lookup_misses;
+    total.demand_disk_reads += s->demand_disk_reads;
+    total.read_ahead_lookups += s->read_ahead_lookups;
+    total.read_ahead_lookup_hits += s->read_ahead_lookup_hits;
+    total.read_ahead_lookup_misses += s->read_ahead_lookup_misses;
+    total.read_ahead_skips += s->read_ahead_skips;
+    total.read_ahead_disk_reads += s->read_ahead_disk_reads;
+  }
+  unlock_all_buckets();
+
+  *out = total;
+}
+
+// Reset counters only, preserving cached data and replacement state.
+// An in-flight request may record its lookup before reset and its I/O after.
+void
+bcache_stats_reset(void)
+{
+  lock_all_buckets();
+  memset(bucket_stats, 0, sizeof(bucket_stats));
+  unlock_all_buckets();
 }
 
 // Caller holds eviction_lock and all bucket locks.
@@ -129,6 +168,7 @@ binit(void)
   initlock(&bcache.eviction_lock, "bcache.eviction");
   initlock(&lru_clock_lock, "bcache.clock");
   lru_clock = 0;
+  memset(bucket_stats, 0, sizeof(bucket_stats));
 
   for (int i = 0; i < NB_BUCKET; i++) {
     initlock(&bcache.bucket[i].lock, "bcache.bucket");
@@ -150,12 +190,51 @@ binit(void)
   }
 }
 
+#if BCACHE_K01 && !BCACHE_SELFTEST
+#error "BCACHE_K01 requires BCACHE_SELFTEST"
+#endif
+
+#if BCACHE_K01
+#define K01_BLOCK (FSSIZE + 300)
+static int k01_arrivals, k01_allocations, k01_rechecks;
+static struct buf *k01_child_buf;
+
+// Both harts must miss before either can enter the eviction path.
+// Stay on this hart until its peer arrives. No cache lock is held.
+static void
+k01_after_miss(void)
+{
+  push_off();
+  uint64 start = r_time();
+  __atomic_add_fetch(&k01_arrivals, 1, __ATOMIC_ACQ_REL);
+  while (__atomic_load_n(&k01_arrivals, __ATOMIC_ACQUIRE) != 2) {
+    if (r_time() - start > 50000000)
+      panic("K01: second hart did not reach miss");
+  }
+  pop_off();
+}
+#endif
+
+// Caller holds the target bucket lock.
+static void
+record_lookup_hit(struct cache_stats *stats, enum cache_source source)
+{
+  if (source == DEMAND) {
+    stats->demand_lookups++;
+    stats->demand_lookup_hits++;
+  } else {
+    stats->read_ahead_lookups++;
+    stats->read_ahead_lookup_hits++;
+  }
+}
+
 // Success: returns a referenced, sleep-locked buffer.
 // READ_AHEAD may return 0 when no buffer is available.
 static struct buf *
 bget_source(uint dev, uint blockno, enum cache_source source)
 {
   uint index = cache_hash(dev, blockno);
+  struct cache_stats *stats = &bucket_stats[index];
   struct buf *b;
 
   // Fast path: lock only the target bucket.
@@ -164,12 +243,18 @@ bget_source(uint dev, uint blockno, enum cache_source source)
 
   if (b) {
     b->refcnt++;
+    record_lookup_hit(stats, source);
     release(&bcache.bucket[index].lock);
     acquiresleep(&b->lock);
     return b;
   }
 
   release(&bcache.bucket[index].lock);
+
+#if BCACHE_K01
+  if (dev == ROOTDEV && blockno == K01_BLOCK)
+    k01_after_miss();
+#endif
 
   // Slow path: serialize allocation and stabilize all mappings.
   acquire(&bcache.eviction_lock);
@@ -179,11 +264,20 @@ bget_source(uint dev, uint blockno, enum cache_source source)
   b = lookup(index, dev, blockno);
 
   if (b) {
+#if BCACHE_K01
+    if (dev == ROOTDEV && blockno == K01_BLOCK)
+      k01_rechecks++;
+#endif
     b->refcnt++;
+    record_lookup_hit(stats, source);
   } else {
     b = choose_victim();
 
     if (b == 0) {
+      if (source == READ_AHEAD) {
+        stats->read_ahead_lookups++;
+        stats->read_ahead_skips++;
+      }
       unlock_all_buckets();
       release(&bcache.eviction_lock);
 
@@ -196,6 +290,10 @@ bget_source(uint dev, uint blockno, enum cache_source source)
     if (b->mapped)
       unlink_buffer(b);
 
+#if BCACHE_K01
+    if (dev == ROOTDEV && blockno == K01_BLOCK)
+      k01_allocations++;
+#endif
     b->dev = dev;
     b->blockno = blockno;
     b->mapped = 1;
@@ -205,6 +303,13 @@ bget_source(uint dev, uint blockno, enum cache_source source)
 
     b->hnext = bcache.bucket[index].head;
     bcache.bucket[index].head = b;
+    if (source == DEMAND) {
+      stats->demand_lookups++;
+      stats->demand_lookup_misses++;
+    } else {
+      stats->read_ahead_lookups++;
+      stats->read_ahead_lookup_misses++;
+    }
   }
 
   unlock_all_buckets();
@@ -223,6 +328,15 @@ bread_source(uint dev, uint blockno, enum cache_source source)
     return 0;
 
   if (!b->valid) {
+    // The held buffer reference keeps the mapping stable.
+    uint index = cache_hash(dev, blockno);
+    acquire(&bcache.bucket[index].lock);
+    if (source == DEMAND)
+      bucket_stats[index].demand_disk_reads++;
+    else
+      bucket_stats[index].read_ahead_disk_reads++;
+    release(&bcache.bucket[index].lock);
+
     virtio_disk_rw(b, 0);
     b->valid = 1;
   }
@@ -293,6 +407,174 @@ bunpin(struct buf *b)
   release(&bcache.bucket[index].lock);
 }
 #if BCACHE_SELFTEST
+
+extern struct superblock sb;
+
+void
+bcache_test_s02(void)
+{
+  struct cache_stats actual;
+  struct cache_stats expected = {0};
+  struct buf *b;
+
+  // Use an on-disk block from the freshly built filesystem image.
+  uint blockno = sb.size - 1;
+  uint index = cache_hash(ROOTDEV, blockno);
+
+  acquire(&bcache.bucket[index].lock);
+  int cached = lookup(index, ROOTDEV, blockno) != 0;
+  release(&bcache.bucket[index].lock);
+  if (cached)
+    panic("S02: expected a cold block");
+
+  bcache_stats_reset();
+
+  b = bread_ra(ROOTDEV, blockno);
+  if (b == 0)
+    panic("S02: bread_ra returned 0");
+  brelse(b);
+
+  expected.read_ahead_lookups = 1;
+  expected.read_ahead_lookup_misses = 1;
+  expected.read_ahead_disk_reads = 1;
+
+  bcache_stats_snapshot(&actual);
+  if (memcmp(&actual, &expected, sizeof(actual)) != 0)
+    panic("S02: wrong counters after bread_ra");
+
+  b = bread(ROOTDEV, blockno);
+  brelse(b);
+
+  expected.demand_lookups = 1;
+  expected.demand_lookup_hits = 1;
+
+  bcache_stats_snapshot(&actual);
+  if (memcmp(&actual, &expected, sizeof(actual)) != 0)
+    panic("S02: wrong counters after bread");
+
+  printk("PASS S02: read-ahead lookup=1 miss=1 disk_reads=1\n");
+  printk("PASS S02: demand lookup=1 hit=1 disk_reads=0\n");
+
+  bcache_stats_reset();
+}
+
+// Called before fsinit, with every buffer pinned and no concurrent cache user.
+static void
+check_stats(void)
+{
+  struct cache_stats snapshot, again;
+  const struct cache_stats zero = {0};
+  uint64 clock_before = lru_clock;
+
+  // Distinct fields in every bucket catch omitted fields/buckets and narrowing.
+  lock_all_buckets();
+  for (int i = 0; i < NB_BUCKET; i++) {
+    uint64 n = i + 1;
+    bucket_stats[i] = (struct cache_stats){
+      .demand_lookups = 3 * n,
+      .demand_lookup_hits = n,
+      .demand_lookup_misses = 2 * n,
+      .demand_disk_reads = (1ULL << 32) + 4 * n,
+      .read_ahead_lookups = 18 * n,
+      .read_ahead_lookup_hits = 5 * n,
+      .read_ahead_lookup_misses = 6 * n,
+      .read_ahead_skips = 7 * n,
+      .read_ahead_disk_reads = 8 * n,
+    };
+  }
+  unlock_all_buckets();
+
+  uint64 sum = NB_BUCKET * (NB_BUCKET + 1) / 2;
+  const struct cache_stats expected = {
+    3 * sum,  sum,     2 * sum, ((uint64)NB_BUCKET << 32) + 4 * sum,
+    18 * sum, 5 * sum, 6 * sum, 7 * sum,
+    8 * sum,
+  };
+  bcache_stats_snapshot(&snapshot);
+  bcache_stats_snapshot(&again);
+  if (memcmp(&snapshot, &expected, sizeof(snapshot)) != 0 ||
+      memcmp(&snapshot, &again, sizeof(snapshot)) != 0)
+    panic("stats: snapshot aggregation");
+
+  bcache_stats_reset();
+  bcache_stats_snapshot(&snapshot);
+  if (memcmp(&snapshot, &zero, sizeof(snapshot)) != 0)
+    panic("stats: reset counters");
+  bcache_stats_reset();
+  bcache_stats_snapshot(&again);
+  if (memcmp(&again, &zero, sizeof(again)) != 0)
+    panic("stats: repeated reset");
+
+  if (lru_clock != clock_before)
+    panic("stats: reset clock");
+  for (int i = 0; i < NBUF; i++) {
+    struct buf *b = &bcache.buf[i];
+    // Fixture references went 1 -> 2 -> 1, so lastuse must still be zero.
+    if (!b->mapped || b->valid || b->refcnt != 1 || b->lastuse != 0)
+      panic("stats: reset cache state");
+  }
+  printk("PASS: stats snapshot aggregation and counter-only reset\n");
+}
+
+// Check both representations while mappings are stable. A repeated pointer
+// also catches a cycle before following the same link a second time.
+static void
+check_mappings(void)
+{
+  int seen[NBUF] = {0};
+
+  acquire(&bcache.eviction_lock);
+  lock_all_buckets();
+  for (uint i = 0; i < NB_BUCKET; i++) {
+    for (struct buf *b = bcache.bucket[i].head; b; b = b->hnext) {
+      int j = 0;
+      while (j < NBUF && b != &bcache.buf[j])
+        j++;
+      if (j == NBUF || seen[j] || !b->mapped ||
+          cache_hash(b->dev, b->blockno) != i)
+        panic("bcache: invalid bucket chain");
+      seen[j] = 1;
+    }
+  }
+  for (int j = 0; j < NBUF; j++) {
+    struct buf *b = &bcache.buf[j];
+    if (seen[j] != b->mapped)
+      panic("bcache: lost mapping");
+    for (int k = 0; k < j && b->mapped; k++) {
+      struct buf *other = &bcache.buf[k];
+      if (other->mapped && other->dev == b->dev && other->blockno == b->blockno)
+        panic("bcache: duplicate key");
+    }
+  }
+  unlock_all_buckets();
+  release(&bcache.eviction_lock);
+}
+
+#if BCACHE_K01
+void
+bcache_k01_child(void)
+{
+  k01_child_buf = bget_source(ROOTDEV, K01_BLOCK, DEMAND);
+  brelse(k01_child_buf);
+  kexit(0);
+}
+
+void
+bcache_k01(void)
+{
+  int pid = kfork();
+  if (pid < 0)
+    panic("K01: fork");
+  struct buf *b = bget_source(ROOTDEV, K01_BLOCK, DEMAND);
+  brelse(b);
+  if (kwait(0) != pid || k01_arrivals != 2 || k01_allocations != 1 ||
+      k01_rechecks != 1 || b != k01_child_buf || b->refcnt != 0)
+    panic("K01: miss/recheck mismatch");
+  check_mappings();
+  printk("PASS K01: two hart misses, one allocation, one recheck hit\n");
+}
+#endif
+
 // Run once, before fsinit, while no other process uses the cache.
 // Synthetic mappings are tested without issuing disk I/O.
 void
@@ -312,6 +594,7 @@ bcache_selftest(void)
   }
 
   // A hit must reuse the existing mapping, even with no idle buffer.
+  check_stats();
   for (int i = 0; i < NBUF; i++) {
     b = bget_source(ROOTDEV, base + i, DEMAND);
 
@@ -363,6 +646,19 @@ bcache_selftest(void)
   }
 
   printk("PASS: unpin, reuse and bucket migration\n");
+  check_mappings();
+
+  // Recycle the sole idle buffer again, this time within its current bucket.
+  bunpin(held[0]);
+  b = bget_source(ROOTDEV + 1, base + NB_BUCKET, DEMAND);
+  if (b != held[0])
+    panic("K03: wrong same-bucket victim");
+  bpin(b);
+  brelse(b);
+  if (bget_source(ROOTDEV + 1, base, READ_AHEAD) != 0)
+    panic("K03: stale same-bucket key");
+  check_mappings();
+  printk("PASS K03: same/cross-bucket reuse and mapping invariants\n");
 
   for (int i = 0; i < NBUF; i++)
     bunpin(held[i]);
