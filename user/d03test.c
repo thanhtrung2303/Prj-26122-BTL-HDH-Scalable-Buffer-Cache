@@ -3,9 +3,9 @@
 #include "user/user.h"
 #include "kernel/fcntl.h"
 
-#define CHILDREN 3
-#define ROUNDS 20
-#define FILE_SIZE 4096
+#define CHILDREN   3
+#define ROUNDS     20
+#define FILE_SIZE  4096
 #define CHUNK_SIZE 128
 
 static char buf[CHUNK_SIZE];
@@ -19,14 +19,14 @@ create_test_file(char *name, int seed)
 
   unlink(name);
   fd = open(name, O_CREATE | O_RDWR);
-  if(fd < 0)
+  if (fd < 0)
     return -1;
 
-  for(i = 0; i < FILE_SIZE; i += CHUNK_SIZE) {
-    for(j = 0; j < CHUNK_SIZE; j++)
+  for (i = 0; i < FILE_SIZE; i += CHUNK_SIZE) {
+    for (j = 0; j < CHUNK_SIZE; j++)
       data[j] = (char)((i + j + seed) % 251);
 
-    if(write(fd, data, CHUNK_SIZE) != CHUNK_SIZE) {
+    if (write(fd, data, CHUNK_SIZE) != CHUNK_SIZE) {
       close(fd);
       return -1;
     }
@@ -42,18 +42,18 @@ check_file(char *name, int seed)
   int fd, n, i, j;
 
   fd = open(name, O_RDONLY);
-  if(fd < 0)
+  if (fd < 0)
     return -1;
 
-  for(i = 0; i < FILE_SIZE; i += CHUNK_SIZE) {
+  for (i = 0; i < FILE_SIZE; i += CHUNK_SIZE) {
     n = read(fd, buf, CHUNK_SIZE);
-    if(n != CHUNK_SIZE) {
+    if (n != CHUNK_SIZE) {
       close(fd);
       return -1;
     }
 
-    for(j = 0; j < CHUNK_SIZE; j++) {
-      if((uchar)buf[j] != (uchar)((i + j + seed) % 251)) {
+    for (j = 0; j < CHUNK_SIZE; j++) {
+      if ((uchar)buf[j] != (uchar)((i + j + seed) % 251)) {
         close(fd);
         return -1;
       }
@@ -71,29 +71,28 @@ run_shared_file(void)
   int i, pid, status;
   int failed = 0;
 
-  printf("D03: shared file, %d children, %d rounds\n",
-         CHILDREN, ROUNDS);
+  printf("D03: shared file, %d children, %d rounds\n", CHILDREN, ROUNDS);
 
-  if(create_test_file("d03_shared", 17) < 0)
+  if (create_test_file("d03_shared", 17) < 0)
     return -1;
 
-  for(i = 0; i < CHILDREN; i++) {
+  for (i = 0; i < CHILDREN; i++) {
     pid = fork();
-    if(pid < 0)
+    if (pid < 0)
       return -1;
 
-    if(pid == 0) {
+    if (pid == 0) {
       int round;
-      for(round = 0; round < ROUNDS; round++) {
-        if(check_file("d03_shared", 17) < 0)
+      for (round = 0; round < ROUNDS; round++) {
+        if (check_file("d03_shared", 17) < 0)
           exit(1);
       }
       exit(0);
     }
   }
 
-  for(i = 0; i < CHILDREN; i++) {
-    if(wait(&status) < 0 || status != 0)
+  for (i = 0; i < CHILDREN; i++) {
+    if (wait(&status) < 0 || status != 0)
       failed = 1;
   }
 
@@ -106,39 +105,36 @@ run_separate_files(void)
 {
   int i, pid, status;
   int failed = 0;
-  char *names[CHILDREN] = {
-    "d03_file0", "d03_file1", "d03_file2"
-  };
+  char *names[CHILDREN] = {"d03_file0", "d03_file1", "d03_file2"};
 
-  printf("D03: separate files, %d children, %d rounds\n",
-         CHILDREN, ROUNDS);
+  printf("D03: separate files, %d children, %d rounds\n", CHILDREN, ROUNDS);
 
-  for(i = 0; i < CHILDREN; i++) {
-    if(create_test_file(names[i], 31 + i * 37) < 0)
+  for (i = 0; i < CHILDREN; i++) {
+    if (create_test_file(names[i], 31 + i * 37) < 0)
       return -1;
   }
 
-  for(i = 0; i < CHILDREN; i++) {
+  for (i = 0; i < CHILDREN; i++) {
     pid = fork();
-    if(pid < 0)
+    if (pid < 0)
       return -1;
 
-    if(pid == 0) {
+    if (pid == 0) {
       int round;
-      for(round = 0; round < ROUNDS; round++) {
-        if(check_file(names[i], 31 + i * 37) < 0)
+      for (round = 0; round < ROUNDS; round++) {
+        if (check_file(names[i], 31 + i * 37) < 0)
           exit(1);
       }
       exit(0);
     }
   }
 
-  for(i = 0; i < CHILDREN; i++) {
-    if(wait(&status) < 0 || status != 0)
+  for (i = 0; i < CHILDREN; i++) {
+    if (wait(&status) < 0 || status != 0)
       failed = 1;
   }
 
-  for(i = 0; i < CHILDREN; i++)
+  for (i = 0; i < CHILDREN; i++)
     unlink(names[i]);
 
   return failed ? -1 : 0;
@@ -147,14 +143,14 @@ run_separate_files(void)
 int
 main(void)
 {
-  if(run_shared_file() < 0) {
+  if (run_shared_file() < 0) {
     printf("D03 FAIL: shared file test\n");
     exit(1);
   }
 
   printf("D03 PASS: shared file\n");
 
-  if(run_separate_files() < 0) {
+  if (run_separate_files() < 0) {
     printf("D03 FAIL: separate files test\n");
     exit(1);
   }
