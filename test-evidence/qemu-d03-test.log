@@ -1,0 +1,17 @@
+Script started on 2026-11-16 10:15:56+00:00 [COMMAND="make CPUS=3 qemu" TERM="xterm-256color" TTY="/dev/pts/1" COLUMNS="123" LINES="63"]
+qemu-system-riscv64 -machine virt -bios none -kernel kernel/kernel -m 128M -smp 3 -nographic -global virtio-mmio.force-legacy=false -drive file=fs.img,if=none,format=raw,id=x0 -device virtio-blk-device,drive=x0,bus=virtio-mmio-bus.0
+
+xv6 kernel is booting
+
+hart 1 starting
+hart 2 starting
+init: starting sh
+$ d03test
+D03: shared file, 3 children, 20 rounds
+D03 PASS: shared file
+D03: separate files, 3 children, 20 rounds
+D03 PASS: separate files
+D03 PASS: all tests (20 rounds)
+$ QEMU: Terminated
+
+Script done on 2026-11-16 10:16:16+00:00 [COMMAND_EXIT_CODE="0"]
