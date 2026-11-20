@@ -1,0 +1,44 @@
+[
+  {
+    "name": "d09704e0254b-C0-cpus3-selftest1",
+    "config": "C0",
+    "cpus": 3,
+    "selftest": 1,
+    "k01": 1,
+    "source_sha": "d09704e0254bf4cb46852c41ee0a5a2d22041df2",
+    "started_utc": "2026-11-20T18:39:11.273382+00:00",
+    "checks": {
+      "B01": "PASS",
+      "K01": "PASS",
+      "K03": "PASS",
+      "selftest": "PASS",
+      "K07": "PASS",
+      "cachecheck": "PASS",
+      "rwtest": "PASS"
+    },
+    "build_status": "M kernel/param.h",
+    "result": "PASS",
+    "ended_utc": "2026-11-20T18:39:13.847884+00:00"
+  },
+  {
+    "name": "d09704e0254b-C1-cpus3-selftest1",
+    "config": "C1",
+    "cpus": 3,
+    "selftest": 1,
+    "k01": 1,
+    "source_sha": "d09704e0254bf4cb46852c41ee0a5a2d22041df2",
+    "started_utc": "2026-11-20T18:39:13.851236+00:00",
+    "checks": {
+      "B01": "PASS",
+      "K01": "PASS",
+      "K03": "PASS",
+      "selftest": "PASS",
+      "K07": "PASS",
+      "cachecheck": "PASS",
+      "rwtest": "PASS"
+    },
+    "build_status": "M kernel/param.h",
+    "result": "PASS",
+    "ended_utc": "2026-11-20T18:39:16.538038+00:00"
+  }
+]
