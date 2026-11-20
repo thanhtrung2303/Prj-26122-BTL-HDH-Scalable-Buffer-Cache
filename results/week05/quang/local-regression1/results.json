@@ -1,0 +1,76 @@
+[
+  {
+    "name": "d09704e0254b-C0-cpus1-selftest0",
+    "config": "C0",
+    "cpus": 1,
+    "selftest": 0,
+    "k01": 0,
+    "source_sha": "d09704e0254bf4cb46852c41ee0a5a2d22041df2",
+    "started_utc": "2026-11-20T18:40:35.088581+00:00",
+    "checks": {
+      "B01": "PASS",
+      "cachecheck": "PASS",
+      "rwtest": "PASS",
+      "usertests": "PASS"
+    },
+    "build_status": "",
+    "result": "PASS",
+    "ended_utc": "2026-11-20T18:42:50.523981+00:00"
+  },
+  {
+    "name": "d09704e0254b-C0-cpus3-selftest0",
+    "config": "C0",
+    "cpus": 3,
+    "selftest": 0,
+    "k01": 0,
+    "source_sha": "d09704e0254bf4cb46852c41ee0a5a2d22041df2",
+    "started_utc": "2026-11-20T18:42:50.527220+00:00",
+    "checks": {
+      "B01": "PASS",
+      "cachecheck": "PASS",
+      "rwtest": "PASS",
+      "stressfs": "PASS",
+      "usertests": "PASS"
+    },
+    "build_status": "",
+    "result": "PASS",
+    "ended_utc": "2026-11-20T18:45:09.041909+00:00"
+  },
+  {
+    "name": "d09704e0254b-C1-cpus1-selftest0",
+    "config": "C1",
+    "cpus": 1,
+    "selftest": 0,
+    "k01": 0,
+    "source_sha": "d09704e0254bf4cb46852c41ee0a5a2d22041df2",
+    "started_utc": "2026-11-20T18:45:09.045382+00:00",
+    "checks": {
+      "B01": "PASS",
+      "cachecheck": "PASS",
+      "rwtest": "PASS",
+      "usertests": "PASS"
+    },
+    "build_status": "M kernel/param.h",
+    "result": "PASS",
+    "ended_utc": "2026-11-20T18:47:25.283924+00:00"
+  },
+  {
+    "name": "d09704e0254b-C1-cpus3-selftest0",
+    "config": "C1",
+    "cpus": 3,
+    "selftest": 0,
+    "k01": 0,
+    "source_sha": "d09704e0254bf4cb46852c41ee0a5a2d22041df2",
+    "started_utc": "2026-11-20T18:47:25.287538+00:00",
+    "checks": {
+      "B01": "PASS",
+      "cachecheck": "PASS",
+      "rwtest": "PASS",
+      "stressfs": "PASS",
+      "usertests": "PASS"
+    },
+    "build_status": "M kernel/param.h",
+    "result": "PASS",
+    "ended_utc": "2026-11-20T18:49:45.391984+00:00"
+  }
+]
