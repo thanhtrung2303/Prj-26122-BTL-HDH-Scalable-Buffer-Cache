@@ -1,0 +1,27 @@
+R08 - C1: READ_AHEAD_ENABLED=1
+READ_AHEAD_BLOCKS=2
+Workload: cache_stat reset; d04test; d07test; d08test; cache_stat
+
+D04 PASS: 16 sequential blocks, data and EOF verified
+D07 PASS: size=0
+D07 PASS: size=1023
+D07 PASS: size=1024
+D07 PASS: size=1025
+D07 PASS: EOF verified for all sizes
+D08 PASS: direct blocks verified
+D08 PASS: first indirect block verified
+D08 PASS: 16 blocks, indirect boundary, EOF and file size
+
+demand_lookups: 3089
+demand_lookup_hits: 3027
+demand_lookup_misses: 62
+demand_disk_reads: 62
+read_ahead_lookups: 70
+read_ahead_lookup_hits: 70
+read_ahead_lookup_misses: 0
+read_ahead_skips: 0
+read_ahead_disk_reads: 0
+total_lookups: 3159
+total_disk_reads: 62
+demand_hit_ratio: 97%
+read_ahead_hit_ratio: 100%

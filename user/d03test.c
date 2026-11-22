@@ -10,6 +10,10 @@
 
 static char buf[CHUNK_SIZE];
 
+static char *names[CHILDREN] = {
+  "d03_file0", "d03_file1", "d03_file2"
+};
+
 static int
 create_test_file(char *name, int seed)
 {
@@ -28,6 +32,7 @@ create_test_file(char *name, int seed)
 
     if(write(fd, data, CHUNK_SIZE) != CHUNK_SIZE) {
       close(fd);
+      unlink(name);
       return -1;
     }
   }
@@ -66,21 +71,42 @@ check_file(char *name, int seed)
 }
 
 static int
+wait_children(int started)
+{
+  int i, status;
+  int failed = 0;
+
+  for(i = 0; i < started; i++) {
+    if(wait(&status) < 0)
+      failed = 1;
+    else if(status != 0)
+      failed = 1;
+  }
+
+  return failed ? -1 : 0;
+}
+
+static int
 run_shared_file(void)
 {
-  int i, pid, status;
+  int i, pid;
+  int started = 0;
   int failed = 0;
 
   printf("D03: shared file, %d children, %d rounds\n",
          CHILDREN, ROUNDS);
 
-  if(create_test_file("d03_shared", 17) < 0)
+  if(create_test_file("d03_shared", 17) < 0) {
+    unlink("d03_shared");
     return -1;
+  }
 
   for(i = 0; i < CHILDREN; i++) {
     pid = fork();
-    if(pid < 0)
-      return -1;
+    if(pid < 0) {
+      failed = 1;
+      break;
+    }
 
     if(pid == 0) {
       int round;
@@ -90,56 +116,66 @@ run_shared_file(void)
       }
       exit(0);
     }
+
+    started++;
   }
 
-  for(i = 0; i < CHILDREN; i++) {
-    if(wait(&status) < 0 || status != 0)
-      failed = 1;
-  }
+  if(wait_children(started) < 0)
+    failed = 1;
 
-  unlink("d03_shared");
+  // Cleanup runs even if fork or a child test failed.
+  if(unlink("d03_shared") < 0)
+    failed = 1;
+
   return failed ? -1 : 0;
 }
 
 static int
 run_separate_files(void)
 {
-  int i, pid, status;
+  int i, pid;
+  int started = 0;
   int failed = 0;
-  char *names[CHILDREN] = {
-    "d03_file0", "d03_file1", "d03_file2"
-  };
 
   printf("D03: separate files, %d children, %d rounds\n",
          CHILDREN, ROUNDS);
 
   for(i = 0; i < CHILDREN; i++) {
-    if(create_test_file(names[i], 31 + i * 37) < 0)
-      return -1;
-  }
-
-  for(i = 0; i < CHILDREN; i++) {
-    pid = fork();
-    if(pid < 0)
-      return -1;
-
-    if(pid == 0) {
-      int round;
-      for(round = 0; round < ROUNDS; round++) {
-        if(check_file(names[i], 31 + i * 37) < 0)
-          exit(1);
-      }
-      exit(0);
+    if(create_test_file(names[i], 31 + i * 37) < 0) {
+      failed = 1;
+      break;
     }
   }
 
-  for(i = 0; i < CHILDREN; i++) {
-    if(wait(&status) < 0 || status != 0)
-      failed = 1;
+  if(!failed) {
+    for(i = 0; i < CHILDREN; i++) {
+      pid = fork();
+      if(pid < 0) {
+        failed = 1;
+        break;
+      }
+
+      if(pid == 0) {
+        int round;
+        for(round = 0; round < ROUNDS; round++) {
+          if(check_file(names[i], 31 + i * 37) < 0)
+            exit(1);
+        }
+        exit(0);
+      }
+
+      started++;
+    }
   }
 
-  for(i = 0; i < CHILDREN; i++)
-    unlink(names[i]);
+  if(wait_children(started) < 0)
+    failed = 1;
+
+  // Remove every possible temporary file, including partial setup.
+  for(i = 0; i < CHILDREN; i++) {
+    if(unlink(names[i]) < 0)
+      failed = 1;
+  }
 
   return failed ? -1 : 0;
 }
@@ -148,14 +184,14 @@ int
 main(void)
 {
   if(run_shared_file() < 0) {
-    printf("D03 FAIL: shared file test\n");
+    printf("D03 FAIL: shared file test (cleanup completed)\n");
     exit(1);
   }
 
   printf("D03 PASS: shared file\n");
 
   if(run_separate_files() < 0) {
-    printf("D03 FAIL: separate files test\n");
+    printf("D03 FAIL: separate files test (cleanup completed)\n");
     exit(1);
   }
 
