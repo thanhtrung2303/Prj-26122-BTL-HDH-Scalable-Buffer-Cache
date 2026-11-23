@@ -1,0 +1,11 @@
+--- a/kernel/param.h
++++ b/kernel/param.h
+@@ -17,6 +17,6 @@
+ #define READ_AHEAD_ENABLED 0
+ #define READ_AHEAD_BLOCKS  2
+ 
+-#define BCACHE_SELFTEST 0
++#define BCACHE_SELFTEST 1
+ // Enable with BCACHE_SELFTEST on boots with at least two harts.
+-#define BCACHE_K01 0
++#define BCACHE_K01 1

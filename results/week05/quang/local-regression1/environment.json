@@ -1,0 +1,21 @@
+{
+  "source_sha": "d09704e0254bf4cb46852c41ee0a5a2d22041df2",
+  "source_status": "?? results/week05/\n?? scripts/quang_week05.py\n?? \"tatus --short\"",
+  "source_policy": "Only committed source is cloned; configuration patch saved per cell.",
+  "started_utc": "2026-11-20T18:40:35.077098+00:00",
+  "host": "Linux quang-ASUS-TUF-Gaming-F16-FX607VUR-FX607VU 7.2.6 #5 SMP PREEMPT_DYNAMIC Tue Sep 22 15:29:07 +07 2026 x86_64 GNU/Linux",
+  "qemu": "QEMU emulator version 10.2.1 (Debian 1:10.2.1+ds-1ubuntu3.3)\nCopyright (c) 2003-2025 Fabrice Bellard and the QEMU Project developers",
+  "compiler": "riscv64-linux-gnu-gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0\nCopyright (C) 2025 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.",
+  "make": "GNU Make 4.4.1\nBuilt for x86_64-pc-linux-gnu\nCopyright (C) 1988-2023 Free Software Foundation, Inc.\nLicense GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>\nThis is free software: you are free to change and redistribute it.\nThere is NO WARRANTY, to the extent permitted by law.",
+  "ram": "128 MiB",
+  "data": "fresh mkfs image per cell; cachecheck 64 KiB x 3 x 4 readers; rwtest as committed",
+  "invocation": [
+    "scripts/quang_week05.py",
+    "--sha",
+    "d09704e0254b",
+    "--mode",
+    "regression",
+    "--output",
+    "results/week05/quang/local-regression1"
+  ]
+}
