@@ -1,0 +1,118 @@
+[
+  {
+    "name": "bde8afc85922-C0-cpus3-selftest1",
+    "config": "C0",
+    "cpus": 3,
+    "selftest": 1,
+    "k01": 1,
+    "source_sha": "bde8afc85922f103066e27c830fb75f0643d63cc",
+    "started_utc": "2026-11-23T08:37:24.611136+00:00",
+    "checks": {
+      "B01": "PASS",
+      "K01": "PASS",
+      "K03": "PASS",
+      "selftest": "PASS",
+      "K07": "PASS",
+      "cachecheck": "PASS",
+      "rwtest": "PASS"
+    },
+    "build_status": "M kernel/param.h",
+    "result": "PASS",
+    "ended_utc": "2026-11-23T08:37:27.233685+00:00"
+  },
+  {
+    "name": "bde8afc85922-C0-cpus1-selftest0",
+    "config": "C0",
+    "cpus": 1,
+    "selftest": 0,
+    "k01": 0,
+    "source_sha": "bde8afc85922f103066e27c830fb75f0643d63cc",
+    "started_utc": "2026-11-23T08:37:27.237255+00:00",
+    "checks": {
+      "B01": "PASS",
+      "cachecheck": "PASS",
+      "rwtest": "PASS",
+      "usertests": "PASS"
+    },
+    "build_status": "M kernel/param.h",
+    "result": "PASS",
+    "ended_utc": "2026-11-23T08:39:42.613659+00:00"
+  },
+  {
+    "name": "bde8afc85922-C0-cpus3-selftest0",
+    "config": "C0",
+    "cpus": 3,
+    "selftest": 0,
+    "k01": 0,
+    "source_sha": "bde8afc85922f103066e27c830fb75f0643d63cc",
+    "started_utc": "2026-11-23T08:39:42.617386+00:00",
+    "checks": {
+      "B01": "PASS",
+      "cachecheck": "PASS",
+      "rwtest": "PASS",
+      "stressfs": "PASS",
+      "usertests": "PASS"
+    },
+    "build_status": "M kernel/param.h",
+    "result": "PASS",
+    "ended_utc": "2026-11-23T08:42:00.912682+00:00"
+  },
+  {
+    "name": "bde8afc85922-C1-cpus3-selftest1",
+    "config": "C1",
+    "cpus": 3,
+    "selftest": 1,
+    "k01": 1,
+    "source_sha": "bde8afc85922f103066e27c830fb75f0643d63cc",
+    "started_utc": "2026-11-23T08:42:00.916296+00:00",
+    "checks": {
+      "B01": "PASS",
+      "K01": "PASS",
+      "K03": "PASS",
+      "selftest": "PASS",
+      "K07": "PASS",
+      "cachecheck": "PASS",
+      "rwtest": "PASS"
+    },
+    "build_status": "M kernel/param.h",
+    "result": "PASS",
+    "ended_utc": "2026-11-23T08:42:03.694693+00:00"
+  },
+  {
+    "name": "bde8afc85922-C1-cpus1-selftest0",
+    "config": "C1",
+    "cpus": 1,
+    "selftest": 0,
+    "k01": 0,
+    "source_sha": "bde8afc85922f103066e27c830fb75f0643d63cc",
+    "started_utc": "2026-11-23T08:42:03.698429+00:00",
+    "checks": {
+      "B01": "PASS",
+      "cachecheck": "PASS",
+      "rwtest": "PASS",
+      "usertests": "PASS"
+    },
+    "build_status": "",
+    "result": "PASS",
+    "ended_utc": "2026-11-23T08:44:19.972351+00:00"
+  },
+  {
+    "name": "bde8afc85922-C1-cpus3-selftest0",
+    "config": "C1",
+    "cpus": 3,
+    "selftest": 0,
+    "k01": 0,
+    "source_sha": "bde8afc85922f103066e27c830fb75f0643d63cc",
+    "started_utc": "2026-11-23T08:44:19.975942+00:00",
+    "checks": {
+      "B01": "PASS",
+      "cachecheck": "PASS",
+      "rwtest": "PASS",
+      "stressfs": "PASS",
+      "usertests": "PASS"
+    },
+    "build_status": "",
+    "result": "PASS",
+    "ended_utc": "2026-11-23T08:47:11.468798+00:00"
+  }
+]
