@@ -3,46 +3,66 @@
 ## Scope
 
 This contribution covers D03 cleanup, D04, D07, D08 and R08
-configuration comparison.
+configuration comparison. No Week 03 files are changed by this evidence update.
 
-No Week 03 documentation or evidence is modified.
+## Test provenance and configuration
+
+| Item | Recorded value |
+|---|---|
+| PR base/source reference requested by reviewer | `bde8afc85922f103066e27c830fb75f0643d63cc` |
+| PR branch | `hai/NguyenXuanHai202233383-docs` |
+| CPU count | `CPUS=3` (Makefile default) |
+| `READ_AHEAD_BLOCKS` | `2` |
+| `BCACHE_SELFTEST` | `0` — disabled; self-test was not run |
+| `BCACHE_K01` | `0` — disabled; K01 self-test was not run |
+
+**SHA clarification:** the SHA above is the PR base/source reference supplied by the
+reviewer. It is not the PR head commit. The previously saved C0/C1 console
+summaries did not record their exact tested commit SHA or CPU count at run time.
+Therefore those historical traces cannot prove that C0 and C1 were run on the
+same source revision. A fresh paired run is required; follow
+[`RETEST-INSTRUCTIONS.md`](RETEST-INSTRUCTIONS.md) and record the resulting
+PR head SHA in both logs before treating the comparison as verified.
 
 ## D03 – Cleanup
 
+Previously observed QEMU result:
 - Shared-file test: PASS.
 - Separate-file test: PASS.
-- Temporary test files are removed after execution.
-- Three children and 20 rounds were tested.
+- Three children and 20 rounds.
+- Temporary test files were removed after execution.
+
+A fresh terminal capture for the current PR head is still required.
 
 ## D04 – Sequential Read
 
+Previously observed QEMU result:
 - Read 16 sequential blocks.
-- Verify returned data.
-- Verify EOF behavior.
-- Result: PASS in C0 and C1.
+- Verify returned data and EOF.
+- Result: PASS.
+
+A fresh terminal capture for the current PR head is still required.
 
 ## D07 – File Size and EOF
 
-Tested file sizes:
+Previously observed QEMU result for file sizes 0, 1023, 1024 and 1025 bytes:
+- Data checks: PASS.
+- EOF checks: PASS.
 
-- 0 bytes
-- BSIZE - 1 (1023 bytes)
-- BSIZE (1024 bytes)
-- BSIZE + 1 (1025 bytes)
-
-Data and EOF checks passed in C0 and C1.
+A fresh terminal capture for the current PR head is still required.
 
 ## D08 – Direct and Indirect Blocks
 
-- Read 16 sequential blocks.
-- Verify data across the direct/indirect boundary.
-- Verify EOF.
-- Verify file size remains unchanged during reading.
-- Result: PASS in C0 and C1.
+Previously observed QEMU result:
+- Read 16 sequential blocks across the direct/indirect boundary.
+- Verify data, EOF and unchanged file size.
+- Result: PASS.
 
-## R08 – Read-ahead Configuration Comparison
+A fresh terminal capture for the current PR head is still required.
 
-Both configurations used the same workload:
+## R08 – Historical Read-ahead Comparison
+
+The saved historical traces used this workload:
 
 `cache_stat reset; d04test; d07test; d08test; cache_stat`
 
@@ -62,25 +82,26 @@ Both configurations used the same workload:
 | Demand hit ratio | 98% | 97% |
 | Read-ahead hit ratio | N/A | 100% |
 
-### Interpretation
+Interpretation: C1 records 70 read-ahead lookups, all reported as cache hits.
+This workload does not demonstrate reduced disk I/O: C1 recorded four more
+demand disk reads than C0. No performance improvement is claimed.
 
-C0 confirms that read-ahead lookups are disabled.
+The historical traces are summaries, not raw terminal captures, and do not
+contain a verifiable source SHA/CPUS header. Replace or supplement them with
+the paired fresh captures described in `RETEST-INSTRUCTIONS.md`.
 
-C1 records 70 read-ahead lookups, all reported as cache hits.
-No read-ahead disk reads occurred in this workload.
+## CI scope
 
-This result confirms read-ahead lookup activity, but does not demonstrate
-a reduction in disk I/O for this particular workload. C1 recorded four
-more demand disk reads than C0.
+GitHub Actions checks formatting, builds the kernel and filesystem image, and
+runs the repository's `usertests` and `crash` suites on Linux. macOS runs the
+build. These CI jobs do not execute the interactive D03/D04/D07/D08 programs
+or the R08 comparison; those require the QEMU evidence above.
 
-## Trace Files
+## Final configuration
 
-- `r08-c0.log`: read-ahead disabled.
-- `r08-c1.log`: read-ahead enabled.
-
-## Final Configuration
-
-The working tree was restored to:
+Restore the tracked configuration after the paired run:
 
 - `READ_AHEAD_ENABLED 1`
 - `READ_AHEAD_BLOCKS 2`
+- `BCACHE_SELFTEST 0`
+- `BCACHE_K01 0`
