@@ -3,7 +3,7 @@
 #include "kernel/fcntl.h"
 #include "user/user.h"
 
-#define BSIZE    1024
+#define BSIZE       1024
 #define NDIRECT     12
 #define TEST_BLOCKS 16
 
