@@ -154,6 +154,9 @@ UPROGS=\
 	$U/_rwtest\
 	$U/_cachecheck\
 	$U/_d03test \
+	$U/_d04test \
+	$U/_d07test \
+	$U/_d08test \
 	$U/_cache_stat \
 
 fs.img: mkfs/mkfs README $(UPROGS)

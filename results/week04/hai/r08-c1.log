@@ -1,0 +1,187 @@
+SOURCE_SHA=dbfe4983133577e9106b507ab55625eede1bf702
+CPUS=3
+READ_AHEAD_ENABLED=1
+READ_AHEAD_BLOCKS=2
+BCACHE_SELFTEST=0
+BCACHE_K01=0
+QEMU emulator version 10.2.2 (qemu-10.2.2-1.fc44)
+Script started on 2026-11-25 13:13:35+00:00 [COMMAND="make qemu CPUS=3" TERM="xterm-256color" TTY="/dev/pts/1" COLUMNS="99" LINES="63"]
+gcc -Wno-unknown-attributes -I. -o mkfs/mkfs mkfs/mkfs.c
+riscv64-linux-gnu-gcc -Wall -Werror -Wno-unknown-attributes -O -fno-omit-frame-pointer -ggdb -gdwarf-2 -ffile-prefix-map=/home/nguyenxuanhai/kernel-programming/xv6-read-ahead-evidence=. -march=rv64gc -std=gnu99 -MD -mcmodel=medany -ffreestanding -fno-common -nostdlib -fno-delete-null-pointer-checks -fno-builtin-strncpy -fno-builtin-strncmp -fno-builtin-strlen -fno-builtin-memset -fno-builtin-memmove -fno-builtin-memcmp -fno-builtin-log -fno-builtin-bzero -fno-builtin-strchr -fno-builtin-exit -fno-builtin-malloc -fno-builtin-putc -fno-builtin-free -fno-builtin-memcpy -Wno-main -fno-builtin-printf -fno-builtin-fprintf -fno-builtin-vprintf -I. -fno-stack-protector -fno-pie -no-pie   -c -o user/ulib.o user/ulib.c
+perl user/usys.pl > user/usys.S
+riscv64-linux-gnu-gcc -Wall -Werror -Wno-unknown-attributes -O -fno-omit-frame-pointer -ggdb -gdwarf-2 -ffile-prefix-map=/home/nguyenxuanhai/kernel-programming/xv6-read-ahead-evidence=. -march=rv64gc -std=gnu99 -MD -mcmodel=medany -ffreestanding -fno-common -nostdlib -fno-delete-null-pointer-checks -fno-builtin-strncpy -fno-builtin-strncmp -fno-builtin-strlen -fno-builtin-memset -fno-builtin-memmove -fno-builtin-memcmp -fno-builtin-log -fno-builtin-bzero -fno-builtin-strchr -fno-builtin-exit -fno-builtin-malloc -fno-builtin-putc -fno-builtin-free -fno-builtin-memcpy -Wno-main -fno-builtin-printf -fno-builtin-fprintf -fno-builtin-vprintf -I. -fno-stack-protector -fno-pie -no-pie -c -o user/usys.o user/usys.S
+riscv64-linux-gnu-gcc -Wall -Werror -Wno-unknown-attributes -O -fno-omit-frame-pointer -ggdb -gdwarf-2 -ffile-prefix-map=/home/nguyenxuanhai/kernel-programming/xv6-read-ahead-evidence=. -march=rv64gc -std=gnu99 -MD -mcmodel=medany -ffreestanding -fno-common -nostdlib -fno-delete-null-pointer-checks -fno-builtin-strncpy -fno-builtin-strncmp -fno-builtin-strlen -fno-builtin-memset -fno-builtin-memmove -fno-builtin-memcmp -fno-builtin-log -fno-builtin-bzero -fno-builtin-strchr -fno-builtin-exit -fno-builtin-malloc -fno-builtin-putc -fno-builtin-free -fno-builtin-memcpy -Wno-main -fno-builtin-printf -fno-builtin-fprintf -fno-builtin-vprintf -I. -fno-stack-protector -fno-pie -no-pie   -c -o user/printf.o user/printf.c
+riscv64-linux-gnu-gcc -Wall -Werror -Wno-unknown-attributes -O -fno-omit-frame-pointer -ggdb -gdwarf-2 -ffile-prefix-map=/home/nguyenxuanhai/kernel-programming/xv6-read-ahead-evidence=. -march=rv64gc -std=gnu99 -MD -mcmodel=medany -ffreestanding -fno-common -nostdlib -fno-delete-null-pointer-checks -fno-builtin-strncpy -fno-builtin-strncmp -fno-builtin-strlen -fno-builtin-memset -fno-builtin-memmove -fno-builtin-memcmp -fno-builtin-log -fno-builtin-bzero -fno-builtin-strchr -fno-builtin-exit -fno-builtin-malloc -fno-builtin-putc -fno-builtin-free -fno-builtin-memcpy -Wno-main -fno-builtin-printf -fno-builtin-fprintf -fno-builtin-vprintf -I. -fno-stack-protector -fno-pie -no-pie   -c -o user/umalloc.o user/umalloc.c
+riscv64-linux-gnu-gcc -Wall -Werror -Wno-unknown-attributes -O -fno-omit-frame-pointer -ggdb -gdwarf-2 -ffile-prefix-map=/home/nguyenxuanhai/kernel-programming/xv6-read-ahead-evidence=. -march=rv64gc -std=gnu99 -MD -mcmodel=medany -ffreestanding -fno-common -nostdlib -fno-delete-null-pointer-checks -fno-builtin-strncpy -fno-builtin-strncmp -fno-builtin-strlen -fno-builtin-memset -fno-builtin-memmove -fno-builtin-memcmp -fno-builtin-log -fno-builtin-bzero -fno-builtin-strchr -fno-builtin-exit -fno-builtin-malloc -fno-builtin-putc -fno-builtin-free -fno-builtin-memcpy -Wno-main -fno-builtin-printf -fno-builtin-fprintf -fno-builtin-vprintf -I. -fno-stack-protector -fno-pie -no-pie   -c -o user/cat.o user/cat.c
+riscv64-linux-gnu-ld -z max-page-size=4096 -T user/user.ld -o user/_cat user/cat.o user/ulib.o user/usys.o user/printf.o user/umalloc.o
+riscv64-linux-gnu-objdump -S user/_cat > user/cat.asm
+riscv64-linux-gnu-objdump -t user/_cat | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > user/cat.sym
+riscv64-linux-gnu-gcc -Wall -Werror -Wno-unknown-attributes -O -fno-omit-frame-pointer -ggdb -gdwarf-2 -ffile-prefix-map=/home/nguyenxuanhai/kernel-programming/xv6-read-ahead-evidence=. -march=rv64gc -std=gnu99 -MD -mcmodel=medany -ffreestanding -fno-common -nostdlib -fno-delete-null-pointer-checks -fno-builtin-strncpy -fno-builtin-strncmp -fno-builtin-strlen -fno-builtin-memset -fno-builtin-memmove -fno-builtin-memcmp -fno-builtin-log -fno-builtin-bzero -fno-builtin-strchr -fno-builtin-exit -fno-builtin-malloc -fno-builtin-putc -fno-builtin-free -fno-builtin-memcpy -Wno-main -fno-builtin-printf -fno-builtin-fprintf -fno-builtin-vprintf -I. -fno-stack-protector -fno-pie -no-pie   -c -o user/echo.o user/echo.c
+riscv64-linux-gnu-ld -z max-page-size=4096 -T user/user.ld -o user/_echo user/echo.o user/ulib.o user/usys.o user/printf.o user/umalloc.o
+riscv64-linux-gnu-objdump -S user/_echo > user/echo.asm
+riscv64-linux-gnu-objdump -t user/_echo | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > user/echo.sym
+riscv64-linux-gnu-gcc -Wall -Werror -Wno-unknown-attributes -O -fno-omit-frame-pointer -ggdb -gdwarf-2 -ffile-prefix-map=/home/nguyenxuanhai/kernel-programming/xv6-read-ahead-evidence=. -march=rv64gc -std=gnu99 -MD -mcmodel=medany -ffreestanding -fno-common -nostdlib -fno-delete-null-pointer-checks -fno-builtin-strncpy -fno-builtin-strncmp -fno-builtin-strlen -fno-builtin-memset -fno-builtin-memmove -fno-builtin-memcmp -fno-builtin-log -fno-builtin-bzero -fno-builtin-strchr -fno-builtin-exit -fno-builtin-malloc -fno-builtin-putc -fno-builtin-free -fno-builtin-memcpy -Wno-main -fno-builtin-printf -fno-builtin-fprintf -fno-builtin-vprintf -I. -fno-stack-protector -fno-pie -no-pie   -c -o user/forktest.o user/forktest.c
+# forktest has less library code linked in - needs to be small
+# in order to be able to max out the proc table.
+riscv64-linux-gnu-ld -z max-page-size=4096 -N -e main -Ttext 0 -o user/_forktest user/forktest.o user/ulib.o user/usys.o
+/usr/bin/riscv64-linux-gnu-ld: warning: user/_forktest has a LOAD segment with RWX permissions
+riscv64-linux-gnu-objdump -S user/_forktest > user/forktest.asm
+riscv64-linux-gnu-gcc -Wall -Werror -Wno-unknown-attributes -O -fno-omit-frame-pointer -ggdb -gdwarf-2 -ffile-prefix-map=/home/nguyenxuanhai/kernel-programming/xv6-read-ahead-evidence=. -march=rv64gc -std=gnu99 -MD -mcmodel=medany -ffreestanding -fno-common -nostdlib -fno-delete-null-pointer-checks -fno-builtin-strncpy -fno-builtin-strncmp -fno-builtin-strlen -fno-builtin-memset -fno-builtin-memmove -fno-builtin-memcmp -fno-builtin-log -fno-builtin-bzero -fno-builtin-strchr -fno-builtin-exit -fno-builtin-malloc -fno-builtin-putc -fno-builtin-free -fno-builtin-memcpy -Wno-main -fno-builtin-printf -fno-builtin-fprintf -fno-builtin-vprintf -I. -fno-stack-protector -fno-pie -no-pie   -c -o user/grep.o user/grep.c
+riscv64-linux-gnu-ld -z max-page-size=4096 -T user/user.ld -o user/_grep user/grep.o user/ulib.o user/usys.o user/printf.o user/umalloc.o
+riscv64-linux-gnu-objdump -S user/_grep > user/grep.asm
+riscv64-linux-gnu-objdump -t user/_grep | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > user/grep.sym
+riscv64-linux-gnu-gcc -Wall -Werror -Wno-unknown-attributes -O -fno-omit-frame-pointer -ggdb -gdwarf-2 -ffile-prefix-map=/home/nguyenxuanhai/kernel-programming/xv6-read-ahead-evidence=. -march=rv64gc -std=gnu99 -MD -mcmodel=medany -ffreestanding -fno-common -nostdlib -fno-delete-null-pointer-checks -fno-builtin-strncpy -fno-builtin-strncmp -fno-builtin-strlen -fno-builtin-memset -fno-builtin-memmove -fno-builtin-memcmp -fno-builtin-log -fno-builtin-bzero -fno-builtin-strchr -fno-builtin-exit -fno-builtin-malloc -fno-builtin-putc -fno-builtin-free -fno-builtin-memcpy -Wno-main -fno-builtin-printf -fno-builtin-fprintf -fno-builtin-vprintf -I. -fno-stack-protector -fno-pie -no-pie   -c -o user/init.o user/init.c
+riscv64-linux-gnu-ld -z max-page-size=4096 -T user/user.ld -o user/_init user/init.o user/ulib.o user/usys.o user/printf.o user/umalloc.o
+riscv64-linux-gnu-objdump -S user/_init > user/init.asm
+riscv64-linux-gnu-objdump -t user/_init | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > user/init.sym
+riscv64-linux-gnu-gcc -Wall -Werror -Wno-unknown-attributes -O -fno-omit-frame-pointer -ggdb -gdwarf-2 -ffile-prefix-map=/home/nguyenxuanhai/kernel-programming/xv6-read-ahead-evidence=. -march=rv64gc -std=gnu99 -MD -mcmodel=medany -ffreestanding -fno-common -nostdlib -fno-delete-null-pointer-checks -fno-builtin-strncpy -fno-builtin-strncmp -fno-builtin-strlen -fno-builtin-memset -fno-builtin-memmove -fno-builtin-memcmp -fno-builtin-log -fno-builtin-bzero -fno-builtin-strchr -fno-builtin-exit -fno-builtin-malloc -fno-builtin-putc -fno-builtin-free -fno-builtin-memcpy -Wno-main -fno-builtin-printf -fno-builtin-fprintf -fno-builtin-vprintf -I. -fno-stack-protector -fno-pie -no-pie   -c -o user/kill.o user/kill.c
+riscv64-linux-gnu-ld -z max-page-size=4096 -T user/user.ld -o user/_kill user/kill.o user/ulib.o user/usys.o user/printf.o user/umalloc.o
+riscv64-linux-gnu-objdump -S user/_kill > user/kill.asm
+riscv64-linux-gnu-objdump -t user/_kill | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > user/kill.sym
+riscv64-linux-gnu-gcc -Wall -Werror -Wno-unknown-attributes -O -fno-omit-frame-pointer -ggdb -gdwarf-2 -ffile-prefix-map=/home/nguyenxuanhai/kernel-programming/xv6-read-ahead-evidence=. -march=rv64gc -std=gnu99 -MD -mcmodel=medany -ffreestanding -fno-common -nostdlib -fno-delete-null-pointer-checks -fno-builtin-strncpy -fno-builtin-strncmp -fno-builtin-strlen -fno-builtin-memset -fno-builtin-memmove -fno-builtin-memcmp -fno-builtin-log -fno-builtin-bzero -fno-builtin-strchr -fno-builtin-exit -fno-builtin-malloc -fno-builtin-putc -fno-builtin-free -fno-builtin-memcpy -Wno-main -fno-builtin-printf -fno-builtin-fprintf -fno-builtin-vprintf -I. -fno-stack-protector -fno-pie -no-pie   -c -o user/ln.o user/ln.c
+riscv64-linux-gnu-ld -z max-page-size=4096 -T user/user.ld -o user/_ln user/ln.o user/ulib.o user/usys.o user/printf.o user/umalloc.o
+riscv64-linux-gnu-objdump -S user/_ln > user/ln.asm
+riscv64-linux-gnu-objdump -t user/_ln | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > user/ln.sym
+riscv64-linux-gnu-gcc -Wall -Werror -Wno-unknown-attributes -O -fno-omit-frame-pointer -ggdb -gdwarf-2 -ffile-prefix-map=/home/nguyenxuanhai/kernel-programming/xv6-read-ahead-evidence=. -march=rv64gc -std=gnu99 -MD -mcmodel=medany -ffreestanding -fno-common -nostdlib -fno-delete-null-pointer-checks -fno-builtin-strncpy -fno-builtin-strncmp -fno-builtin-strlen -fno-builtin-memset -fno-builtin-memmove -fno-builtin-memcmp -fno-builtin-log -fno-builtin-bzero -fno-builtin-strchr -fno-builtin-exit -fno-builtin-malloc -fno-builtin-putc -fno-builtin-free -fno-builtin-memcpy -Wno-main -fno-builtin-printf -fno-builtin-fprintf -fno-builtin-vprintf -I. -fno-stack-protector -fno-pie -no-pie   -c -o user/ls.o user/ls.c
+riscv64-linux-gnu-ld -z max-page-size=4096 -T user/user.ld -o user/_ls user/ls.o user/ulib.o user/usys.o user/printf.o user/umalloc.o
+riscv64-linux-gnu-objdump -S user/_ls > user/ls.asm
+riscv64-linux-gnu-objdump -t user/_ls | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > user/ls.sym
+riscv64-linux-gnu-gcc -Wall -Werror -Wno-unknown-attributes -O -fno-omit-frame-pointer -ggdb -gdwarf-2 -ffile-prefix-map=/home/nguyenxuanhai/kernel-programming/xv6-read-ahead-evidence=. -march=rv64gc -std=gnu99 -MD -mcmodel=medany -ffreestanding -fno-common -nostdlib -fno-delete-null-pointer-checks -fno-builtin-strncpy -fno-builtin-strncmp -fno-builtin-strlen -fno-builtin-memset -fno-builtin-memmove -fno-builtin-memcmp -fno-builtin-log -fno-builtin-bzero -fno-builtin-strchr -fno-builtin-exit -fno-builtin-malloc -fno-builtin-putc -fno-builtin-free -fno-builtin-memcpy -Wno-main -fno-builtin-printf -fno-builtin-fprintf -fno-builtin-vprintf -I. -fno-stack-protector -fno-pie -no-pie   -c -o user/mkdir.o user/mkdir.c
+riscv64-linux-gnu-ld -z max-page-size=4096 -T user/user.ld -o user/_mkdir user/mkdir.o user/ulib.o user/usys.o user/printf.o user/umalloc.o
+riscv64-linux-gnu-objdump -S user/_mkdir > user/mkdir.asm
+riscv64-linux-gnu-objdump -t user/_mkdir | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > user/mkdir.sym
+riscv64-linux-gnu-gcc -Wall -Werror -Wno-unknown-attributes -O -fno-omit-frame-pointer -ggdb -gdwarf-2 -ffile-prefix-map=/home/nguyenxuanhai/kernel-programming/xv6-read-ahead-evidence=. -march=rv64gc -std=gnu99 -MD -mcmodel=medany -ffreestanding -fno-common -nostdlib -fno-delete-null-pointer-checks -fno-builtin-strncpy -fno-builtin-strncmp -fno-builtin-strlen -fno-builtin-memset -fno-builtin-memmove -fno-builtin-memcmp -fno-builtin-log -fno-builtin-bzero -fno-builtin-strchr -fno-builtin-exit -fno-builtin-malloc -fno-builtin-putc -fno-builtin-free -fno-builtin-memcpy -Wno-main -fno-builtin-printf -fno-builtin-fprintf -fno-builtin-vprintf -I. -fno-stack-protector -fno-pie -no-pie   -c -o user/rm.o user/rm.c
+riscv64-linux-gnu-ld -z max-page-size=4096 -T user/user.ld -o user/_rm user/rm.o user/ulib.o user/usys.o user/printf.o user/umalloc.o
+riscv64-linux-gnu-objdump -S user/_rm > user/rm.asm
+riscv64-linux-gnu-objdump -t user/_rm | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > user/rm.sym
+riscv64-linux-gnu-gcc -Wall -Werror -Wno-unknown-attributes -O -fno-omit-frame-pointer -ggdb -gdwarf-2 -ffile-prefix-map=/home/nguyenxuanhai/kernel-programming/xv6-read-ahead-evidence=. -march=rv64gc -std=gnu99 -MD -mcmodel=medany -ffreestanding -fno-common -nostdlib -fno-delete-null-pointer-checks -fno-builtin-strncpy -fno-builtin-strncmp -fno-builtin-strlen -fno-builtin-memset -fno-builtin-memmove -fno-builtin-memcmp -fno-builtin-log -fno-builtin-bzero -fno-builtin-strchr -fno-builtin-exit -fno-builtin-malloc -fno-builtin-putc -fno-builtin-free -fno-builtin-memcpy -Wno-main -fno-builtin-printf -fno-builtin-fprintf -fno-builtin-vprintf -I. -fno-stack-protector -fno-pie -no-pie   -c -o user/sh.o user/sh.c
+riscv64-linux-gnu-ld -z max-page-size=4096 -T user/user.ld -o user/_sh user/sh.o user/ulib.o user/usys.o user/printf.o user/umalloc.o
+riscv64-linux-gnu-objdump -S user/_sh > user/sh.asm
+riscv64-linux-gnu-objdump -t user/_sh | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > user/sh.sym
+riscv64-linux-gnu-gcc -Wall -Werror -Wno-unknown-attributes -O -fno-omit-frame-pointer -ggdb -gdwarf-2 -ffile-prefix-map=/home/nguyenxuanhai/kernel-programming/xv6-read-ahead-evidence=. -march=rv64gc -std=gnu99 -MD -mcmodel=medany -ffreestanding -fno-common -nostdlib -fno-delete-null-pointer-checks -fno-builtin-strncpy -fno-builtin-strncmp -fno-builtin-strlen -fno-builtin-memset -fno-builtin-memmove -fno-builtin-memcmp -fno-builtin-log -fno-builtin-bzero -fno-builtin-strchr -fno-builtin-exit -fno-builtin-malloc -fno-builtin-putc -fno-builtin-free -fno-builtin-memcpy -Wno-main -fno-builtin-printf -fno-builtin-fprintf -fno-builtin-vprintf -I. -fno-stack-protector -fno-pie -no-pie   -c -o user/stressfs.o user/stressfs.c
+riscv64-linux-gnu-ld -z max-page-size=4096 -T user/user.ld -o user/_stressfs user/stressfs.o user/ulib.o user/usys.o user/printf.o user/umalloc.o
+riscv64-linux-gnu-objdump -S user/_stressfs > user/stressfs.asm
+riscv64-linux-gnu-objdump -t user/_stressfs | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > user/stressfs.sym
+riscv64-linux-gnu-gcc -Wall -Werror -Wno-unknown-attributes -O -fno-omit-frame-pointer -ggdb -gdwarf-2 -ffile-prefix-map=/home/nguyenxuanhai/kernel-programming/xv6-read-ahead-evidence=. -march=rv64gc -std=gnu99 -MD -mcmodel=medany -ffreestanding -fno-common -nostdlib -fno-delete-null-pointer-checks -fno-builtin-strncpy -fno-builtin-strncmp -fno-builtin-strlen -fno-builtin-memset -fno-builtin-memmove -fno-builtin-memcmp -fno-builtin-log -fno-builtin-bzero -fno-builtin-strchr -fno-builtin-exit -fno-builtin-malloc -fno-builtin-putc -fno-builtin-free -fno-builtin-memcpy -Wno-main -fno-builtin-printf -fno-builtin-fprintf -fno-builtin-vprintf -I. -fno-stack-protector -fno-pie -no-pie   -c -o user/usertests.o user/usertests.c
+riscv64-linux-gnu-ld -z max-page-size=4096 -T user/user.ld -o user/_usertests user/usertests.o user/ulib.o user/usys.o user/printf.o user/umalloc.o
+riscv64-linux-gnu-objdump -S user/_usertests > user/usertests.asm
+riscv64-linux-gnu-objdump -t user/_usertests | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > user/usertests.sym
+riscv64-linux-gnu-gcc -Wall -Werror -Wno-unknown-attributes -O -fno-omit-frame-pointer -ggdb -gdwarf-2 -ffile-prefix-map=/home/nguyenxuanhai/kernel-programming/xv6-read-ahead-evidence=. -march=rv64gc -std=gnu99 -MD -mcmodel=medany -ffreestanding -fno-common -nostdlib -fno-delete-null-pointer-checks -fno-builtin-strncpy -fno-builtin-strncmp -fno-builtin-strlen -fno-builtin-memset -fno-builtin-memmove -fno-builtin-memcmp -fno-builtin-log -fno-builtin-bzero -fno-builtin-strchr -fno-builtin-exit -fno-builtin-malloc -fno-builtin-putc -fno-builtin-free -fno-builtin-memcpy -Wno-main -fno-builtin-printf -fno-builtin-fprintf -fno-builtin-vprintf -I. -fno-stack-protector -fno-pie -no-pie   -c -o user/grind.o user/grind.c
+riscv64-linux-gnu-ld -z max-page-size=4096 -T user/user.ld -o user/_grind user/grind.o user/ulib.o user/usys.o user/printf.o user/umalloc.o
+riscv64-linux-gnu-objdump -S user/_grind > user/grind.asm
+riscv64-linux-gnu-objdump -t user/_grind | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > user/grind.sym
+riscv64-linux-gnu-gcc -Wall -Werror -Wno-unknown-attributes -O -fno-omit-frame-pointer -ggdb -gdwarf-2 -ffile-prefix-map=/home/nguyenxuanhai/kernel-programming/xv6-read-ahead-evidence=. -march=rv64gc -std=gnu99 -MD -mcmodel=medany -ffreestanding -fno-common -nostdlib -fno-delete-null-pointer-checks -fno-builtin-strncpy -fno-builtin-strncmp -fno-builtin-strlen -fno-builtin-memset -fno-builtin-memmove -fno-builtin-memcmp -fno-builtin-log -fno-builtin-bzero -fno-builtin-strchr -fno-builtin-exit -fno-builtin-malloc -fno-builtin-putc -fno-builtin-free -fno-builtin-memcpy -Wno-main -fno-builtin-printf -fno-builtin-fprintf -fno-builtin-vprintf -I. -fno-stack-protector -fno-pie -no-pie   -c -o user/wc.o user/wc.c
+riscv64-linux-gnu-ld -z max-page-size=4096 -T user/user.ld -o user/_wc user/wc.o user/ulib.o user/usys.o user/printf.o user/umalloc.o
+riscv64-linux-gnu-objdump -S user/_wc > user/wc.asm
+riscv64-linux-gnu-objdump -t user/_wc | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > user/wc.sym
+riscv64-linux-gnu-gcc -Wall -Werror -Wno-unknown-attributes -O -fno-omit-frame-pointer -ggdb -gdwarf-2 -ffile-prefix-map=/home/nguyenxuanhai/kernel-programming/xv6-read-ahead-evidence=. -march=rv64gc -std=gnu99 -MD -mcmodel=medany -ffreestanding -fno-common -nostdlib -fno-delete-null-pointer-checks -fno-builtin-strncpy -fno-builtin-strncmp -fno-builtin-strlen -fno-builtin-memset -fno-builtin-memmove -fno-builtin-memcmp -fno-builtin-log -fno-builtin-bzero -fno-builtin-strchr -fno-builtin-exit -fno-builtin-malloc -fno-builtin-putc -fno-builtin-free -fno-builtin-memcpy -Wno-main -fno-builtin-printf -fno-builtin-fprintf -fno-builtin-vprintf -I. -fno-stack-protector -fno-pie -no-pie   -c -o user/zombie.o user/zombie.c
+riscv64-linux-gnu-ld -z max-page-size=4096 -T user/user.ld -o user/_zombie user/zombie.o user/ulib.o user/usys.o user/printf.o user/umalloc.o
+riscv64-linux-gnu-objdump -S user/_zombie > user/zombie.asm
+riscv64-linux-gnu-objdump -t user/_zombie | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > user/zombie.sym
+riscv64-linux-gnu-gcc -Wall -Werror -Wno-unknown-attributes -O -fno-omit-frame-pointer -ggdb -gdwarf-2 -ffile-prefix-map=/home/nguyenxuanhai/kernel-programming/xv6-read-ahead-evidence=. -march=rv64gc -std=gnu99 -MD -mcmodel=medany -ffreestanding -fno-common -nostdlib -fno-delete-null-pointer-checks -fno-builtin-strncpy -fno-builtin-strncmp -fno-builtin-strlen -fno-builtin-memset -fno-builtin-memmove -fno-builtin-memcmp -fno-builtin-log -fno-builtin-bzero -fno-builtin-strchr -fno-builtin-exit -fno-builtin-malloc -fno-builtin-putc -fno-builtin-free -fno-builtin-memcpy -Wno-main -fno-builtin-printf -fno-builtin-fprintf -fno-builtin-vprintf -I. -fno-stack-protector -fno-pie -no-pie   -c -o user/logstress.o user/logstress.c
+riscv64-linux-gnu-ld -z max-page-size=4096 -T user/user.ld -o user/_logstress user/logstress.o user/ulib.o user/usys.o user/printf.o user/umalloc.o
+riscv64-linux-gnu-objdump -S user/_logstress > user/logstress.asm
+riscv64-linux-gnu-objdump -t user/_logstress | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > user/logstress.sym
+riscv64-linux-gnu-gcc -Wall -Werror -Wno-unknown-attributes -O -fno-omit-frame-pointer -ggdb -gdwarf-2 -ffile-prefix-map=/home/nguyenxuanhai/kernel-programming/xv6-read-ahead-evidence=. -march=rv64gc -std=gnu99 -MD -mcmodel=medany -ffreestanding -fno-common -nostdlib -fno-delete-null-pointer-checks -fno-builtin-strncpy -fno-builtin-strncmp -fno-builtin-strlen -fno-builtin-memset -fno-builtin-memmove -fno-builtin-memcmp -fno-builtin-log -fno-builtin-bzero -fno-builtin-strchr -fno-builtin-exit -fno-builtin-malloc -fno-builtin-putc -fno-builtin-free -fno-builtin-memcpy -Wno-main -fno-builtin-printf -fno-builtin-fprintf -fno-builtin-vprintf -I. -fno-stack-protector -fno-pie -no-pie   -c -o user/forphan.o user/forphan.c
+riscv64-linux-gnu-ld -z max-page-size=4096 -T user/user.ld -o user/_forphan user/forphan.o user/ulib.o user/usys.o user/printf.o user/umalloc.o
+riscv64-linux-gnu-objdump -S user/_forphan > user/forphan.asm
+riscv64-linux-gnu-objdump -t user/_forphan | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > user/forphan.sym
+riscv64-linux-gnu-gcc -Wall -Werror -Wno-unknown-attributes -O -fno-omit-frame-pointer -ggdb -gdwarf-2 -ffile-prefix-map=/home/nguyenxuanhai/kernel-programming/xv6-read-ahead-evidence=. -march=rv64gc -std=gnu99 -MD -mcmodel=medany -ffreestanding -fno-common -nostdlib -fno-delete-null-pointer-checks -fno-builtin-strncpy -fno-builtin-strncmp -fno-builtin-strlen -fno-builtin-memset -fno-builtin-memmove -fno-builtin-memcmp -fno-builtin-log -fno-builtin-bzero -fno-builtin-strchr -fno-builtin-exit -fno-builtin-malloc -fno-builtin-putc -fno-builtin-free -fno-builtin-memcpy -Wno-main -fno-builtin-printf -fno-builtin-fprintf -fno-builtin-vprintf -I. -fno-stack-protector -fno-pie -no-pie   -c -o user/dorphan.o user/dorphan.c
+riscv64-linux-gnu-ld -z max-page-size=4096 -T user/user.ld -o user/_dorphan user/dorphan.o user/ulib.o user/usys.o user/printf.o user/umalloc.o
+riscv64-linux-gnu-objdump -S user/_dorphan > user/dorphan.asm
+riscv64-linux-gnu-objdump -t user/_dorphan | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > user/dorphan.sym
+riscv64-linux-gnu-gcc -Wall -Werror -Wno-unknown-attributes -O -fno-omit-frame-pointer -ggdb -gdwarf-2 -ffile-prefix-map=/home/nguyenxuanhai/kernel-programming/xv6-read-ahead-evidence=. -march=rv64gc -std=gnu99 -MD -mcmodel=medany -ffreestanding -fno-common -nostdlib -fno-delete-null-pointer-checks -fno-builtin-strncpy -fno-builtin-strncmp -fno-builtin-strlen -fno-builtin-memset -fno-builtin-memmove -fno-builtin-memcmp -fno-builtin-log -fno-builtin-bzero -fno-builtin-strchr -fno-builtin-exit -fno-builtin-malloc -fno-builtin-putc -fno-builtin-free -fno-builtin-memcpy -Wno-main -fno-builtin-printf -fno-builtin-fprintf -fno-builtin-vprintf -I. -fno-stack-protector -fno-pie -no-pie   -c -o user/sync.o user/sync.c
+riscv64-linux-gnu-ld -z max-page-size=4096 -T user/user.ld -o user/_sync user/sync.o user/ulib.o user/usys.o user/printf.o user/umalloc.o
+riscv64-linux-gnu-objdump -S user/_sync > user/sync.asm
+riscv64-linux-gnu-objdump -t user/_sync | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > user/sync.sym
+riscv64-linux-gnu-gcc -Wall -Werror -Wno-unknown-attributes -O -fno-omit-frame-pointer -ggdb -gdwarf-2 -ffile-prefix-map=/home/nguyenxuanhai/kernel-programming/xv6-read-ahead-evidence=. -march=rv64gc -std=gnu99 -MD -mcmodel=medany -ffreestanding -fno-common -nostdlib -fno-delete-null-pointer-checks -fno-builtin-strncpy -fno-builtin-strncmp -fno-builtin-strlen -fno-builtin-memset -fno-builtin-memmove -fno-builtin-memcmp -fno-builtin-log -fno-builtin-bzero -fno-builtin-strchr -fno-builtin-exit -fno-builtin-malloc -fno-builtin-putc -fno-builtin-free -fno-builtin-memcpy -Wno-main -fno-builtin-printf -fno-builtin-fprintf -fno-builtin-vprintf -I. -fno-stack-protector -fno-pie -no-pie   -c -o user/rwtest.o user/rwtest.c
+riscv64-linux-gnu-ld -z max-page-size=4096 -T user/user.ld -o user/_rwtest user/rwtest.o user/ulib.o user/usys.o user/printf.o user/umalloc.o
+riscv64-linux-gnu-objdump -S user/_rwtest > user/rwtest.asm
+riscv64-linux-gnu-objdump -t user/_rwtest | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > user/rwtest.sym
+riscv64-linux-gnu-gcc -Wall -Werror -Wno-unknown-attributes -O -fno-omit-frame-pointer -ggdb -gdwarf-2 -ffile-prefix-map=/home/nguyenxuanhai/kernel-programming/xv6-read-ahead-evidence=. -march=rv64gc -std=gnu99 -MD -mcmodel=medany -ffreestanding -fno-common -nostdlib -fno-delete-null-pointer-checks -fno-builtin-strncpy -fno-builtin-strncmp -fno-builtin-strlen -fno-builtin-memset -fno-builtin-memmove -fno-builtin-memcmp -fno-builtin-log -fno-builtin-bzero -fno-builtin-strchr -fno-builtin-exit -fno-builtin-malloc -fno-builtin-putc -fno-builtin-free -fno-builtin-memcpy -Wno-main -fno-builtin-printf -fno-builtin-fprintf -fno-builtin-vprintf -I. -fno-stack-protector -fno-pie -no-pie   -c -o user/cachecheck.o user/cachecheck.c
+riscv64-linux-gnu-ld -z max-page-size=4096 -T user/user.ld -o user/_cachecheck user/cachecheck.o user/ulib.o user/usys.o user/printf.o user/umalloc.o
+riscv64-linux-gnu-objdump -S user/_cachecheck > user/cachecheck.asm
+riscv64-linux-gnu-objdump -t user/_cachecheck | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > user/cachecheck.sym
+riscv64-linux-gnu-gcc -Wall -Werror -Wno-unknown-attributes -O -fno-omit-frame-pointer -ggdb -gdwarf-2 -ffile-prefix-map=/home/nguyenxuanhai/kernel-programming/xv6-read-ahead-evidence=. -march=rv64gc -std=gnu99 -MD -mcmodel=medany -ffreestanding -fno-common -nostdlib -fno-delete-null-pointer-checks -fno-builtin-strncpy -fno-builtin-strncmp -fno-builtin-strlen -fno-builtin-memset -fno-builtin-memmove -fno-builtin-memcmp -fno-builtin-log -fno-builtin-bzero -fno-builtin-strchr -fno-builtin-exit -fno-builtin-malloc -fno-builtin-putc -fno-builtin-free -fno-builtin-memcpy -Wno-main -fno-builtin-printf -fno-builtin-fprintf -fno-builtin-vprintf -I. -fno-stack-protector -fno-pie -no-pie   -c -o user/d03test.o user/d03test.c
+riscv64-linux-gnu-ld -z max-page-size=4096 -T user/user.ld -o user/_d03test user/d03test.o user/ulib.o user/usys.o user/printf.o user/umalloc.o
+riscv64-linux-gnu-objdump -S user/_d03test > user/d03test.asm
+riscv64-linux-gnu-objdump -t user/_d03test | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > user/d03test.sym
+riscv64-linux-gnu-gcc -Wall -Werror -Wno-unknown-attributes -O -fno-omit-frame-pointer -ggdb -gdwarf-2 -ffile-prefix-map=/home/nguyenxuanhai/kernel-programming/xv6-read-ahead-evidence=. -march=rv64gc -std=gnu99 -MD -mcmodel=medany -ffreestanding -fno-common -nostdlib -fno-delete-null-pointer-checks -fno-builtin-strncpy -fno-builtin-strncmp -fno-builtin-strlen -fno-builtin-memset -fno-builtin-memmove -fno-builtin-memcmp -fno-builtin-log -fno-builtin-bzero -fno-builtin-strchr -fno-builtin-exit -fno-builtin-malloc -fno-builtin-putc -fno-builtin-free -fno-builtin-memcpy -Wno-main -fno-builtin-printf -fno-builtin-fprintf -fno-builtin-vprintf -I. -fno-stack-protector -fno-pie -no-pie   -c -o user/d04test.o user/d04test.c
+riscv64-linux-gnu-ld -z max-page-size=4096 -T user/user.ld -o user/_d04test user/d04test.o user/ulib.o user/usys.o user/printf.o user/umalloc.o
+riscv64-linux-gnu-objdump -S user/_d04test > user/d04test.asm
+riscv64-linux-gnu-objdump -t user/_d04test | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > user/d04test.sym
+riscv64-linux-gnu-gcc -Wall -Werror -Wno-unknown-attributes -O -fno-omit-frame-pointer -ggdb -gdwarf-2 -ffile-prefix-map=/home/nguyenxuanhai/kernel-programming/xv6-read-ahead-evidence=. -march=rv64gc -std=gnu99 -MD -mcmodel=medany -ffreestanding -fno-common -nostdlib -fno-delete-null-pointer-checks -fno-builtin-strncpy -fno-builtin-strncmp -fno-builtin-strlen -fno-builtin-memset -fno-builtin-memmove -fno-builtin-memcmp -fno-builtin-log -fno-builtin-bzero -fno-builtin-strchr -fno-builtin-exit -fno-builtin-malloc -fno-builtin-putc -fno-builtin-free -fno-builtin-memcpy -Wno-main -fno-builtin-printf -fno-builtin-fprintf -fno-builtin-vprintf -I. -fno-stack-protector -fno-pie -no-pie   -c -o user/d07test.o user/d07test.c
+riscv64-linux-gnu-ld -z max-page-size=4096 -T user/user.ld -o user/_d07test user/d07test.o user/ulib.o user/usys.o user/printf.o user/umalloc.o
+riscv64-linux-gnu-objdump -S user/_d07test > user/d07test.asm
+riscv64-linux-gnu-objdump -t user/_d07test | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > user/d07test.sym
+riscv64-linux-gnu-gcc -Wall -Werror -Wno-unknown-attributes -O -fno-omit-frame-pointer -ggdb -gdwarf-2 -ffile-prefix-map=/home/nguyenxuanhai/kernel-programming/xv6-read-ahead-evidence=. -march=rv64gc -std=gnu99 -MD -mcmodel=medany -ffreestanding -fno-common -nostdlib -fno-delete-null-pointer-checks -fno-builtin-strncpy -fno-builtin-strncmp -fno-builtin-strlen -fno-builtin-memset -fno-builtin-memmove -fno-builtin-memcmp -fno-builtin-log -fno-builtin-bzero -fno-builtin-strchr -fno-builtin-exit -fno-builtin-malloc -fno-builtin-putc -fno-builtin-free -fno-builtin-memcpy -Wno-main -fno-builtin-printf -fno-builtin-fprintf -fno-builtin-vprintf -I. -fno-stack-protector -fno-pie -no-pie   -c -o user/d08test.o user/d08test.c
+riscv64-linux-gnu-ld -z max-page-size=4096 -T user/user.ld -o user/_d08test user/d08test.o user/ulib.o user/usys.o user/printf.o user/umalloc.o
+riscv64-linux-gnu-objdump -S user/_d08test > user/d08test.asm
+riscv64-linux-gnu-objdump -t user/_d08test | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > user/d08test.sym
+riscv64-linux-gnu-gcc -Wall -Werror -Wno-unknown-attributes -O -fno-omit-frame-pointer -ggdb -gdwarf-2 -ffile-prefix-map=/home/nguyenxuanhai/kernel-programming/xv6-read-ahead-evidence=. -march=rv64gc -std=gnu99 -MD -mcmodel=medany -ffreestanding -fno-common -nostdlib -fno-delete-null-pointer-checks -fno-builtin-strncpy -fno-builtin-strncmp -fno-builtin-strlen -fno-builtin-memset -fno-builtin-memmove -fno-builtin-memcmp -fno-builtin-log -fno-builtin-bzero -fno-builtin-strchr -fno-builtin-exit -fno-builtin-malloc -fno-builtin-putc -fno-builtin-free -fno-builtin-memcpy -Wno-main -fno-builtin-printf -fno-builtin-fprintf -fno-builtin-vprintf -I. -fno-stack-protector -fno-pie -no-pie   -c -o user/cache_stat.o user/cache_stat.c
+riscv64-linux-gnu-ld -z max-page-size=4096 -T user/user.ld -o user/_cache_stat user/cache_stat.o user/ulib.o user/usys.o user/printf.o user/umalloc.o
+riscv64-linux-gnu-objdump -S user/_cache_stat > user/cache_stat.asm
+riscv64-linux-gnu-objdump -t user/_cache_stat | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > user/cache_stat.sym
+mkfs/mkfs fs.img README user/_cat user/_echo user/_forktest user/_grep user/_init user/_kill user/_ln user/_ls user/_mkdir user/_rm user/_sh user/_stressfs user/_usertests user/_grind user/_wc user/_zombie user/_logstress user/_forphan user/_dorphan user/_sync user/_rwtest user/_cachecheck user/_d03test user/_d04test user/_d07test user/_d08test user/_cache_stat
+nmeta 47 (boot, super, log blocks 31, inode blocks 13, bitmap blocks 1) blocks 1953 total 2000
+balloc: first 1261 blocks have been allocated
+balloc: write bitmap block at sector 46
+qemu-system-riscv64 -machine virt -bios none -kernel kernel/kernel -m 128M -smp 3 -nographic -global virtio-mmio.force-legacy=false -drive file=fs.img,if=none,format=raw,id=x0 -device virtio-blk-device,drive=x0,bus=virtio-mmio-bus.0
+
+xv6 kernel is booting
+
+hart 2 starting
+hart 1 starting
+init: starting sh
+$ d03test
+D03: shared file, 3 children, 20 rounds
+D03 PASS: shared file
+D03: separate files, 3 children, 20 rounds
+D03 PASS: separate files
+D03 PASS: all tests (20 rounds)
+$ d04test
+D04 PASS: 16 sequential blocks, data and EOF verified
+$ d07test
+D07: file sizes 0, BSIZE-1, BSIZE, BSIZE+1
+D07 PASS: size=0
+D07 PASS: size=1023
+D07 PASS: size=1024
+D07 PASS: size=1025
+D07 PASS: EOF verified for all sizes
+$ d08test
+D08 PASS: direct blocks verified
+D08 PASS: first indirect block verified
+D08 PASS: 16 blocks, indirect boundary, EOF and file size
+$ cache_stat reset
+$ d04test
+d07test
+d08test
+cache_statD04 PASS: 16 sequential blocks, data and EOF verified
+$ D07: file sizes 0, BSIZE-1, BSIZE, BSIZE+1
+D07 PASS: size=0
+D07 PASS: size=1023
+D07 PASS: size=1024
+D07 PASS: size=1025
+D07 PASS: EOF verified for all sizes
+$ D08 PASS: direct blocks verified
+D08 PASS: first indirect block verified
+D08 PASS: 16 blocks, indirect boundary, EOF and file size
+$ cache_stat
+exec cache_statcache_stat failed
+$ cache_stat
+demand_lookups: 3153
+demand_lookup_hits: 3096
+demand_lookup_misses: 57
+demand_disk_reads: 57
+read_ahead_lookups: 70
+read_ahead_lookup_hits: 70
+read_ahead_lookup_misses: 0
+read_ahead_skips: 0
+read_ahead_disk_reads: 0
+total_lookups: 3223
+total_disk_reads: 57
+demand_hit_ratio: 98%
+read_ahead_hit_ratio: 100%
+$ QEMU: Terminated
+
+Script done on 2026-11-25 13:15:48+00:00 [COMMAND_EXIT_CODE="0"]
