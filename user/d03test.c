@@ -10,9 +10,7 @@
 
 static char buf[CHUNK_SIZE];
 
-static char *names[CHILDREN] = {
-  "d03_file0", "d03_file1", "d03_file2"
-};
+static char *names[CHILDREN] = {"d03_file0", "d03_file1", "d03_file2"};
 
 static int
 create_test_file(char *name, int seed)
@@ -93,8 +91,7 @@ run_shared_file(void)
   int started = 0;
   int failed = 0;
 
-  printf("D03: shared file, %d children, %d rounds\n",
-         CHILDREN, ROUNDS);
+  printf("D03: shared file, %d children, %d rounds\n", CHILDREN, ROUNDS);
 
   if (create_test_file("d03_shared", 17) < 0) {
     unlink("d03_shared");
@@ -137,8 +134,7 @@ run_separate_files(void)
   int started = 0;
   int failed = 0;
 
-  printf("D03: separate files, %d children, %d rounds\n",
-         CHILDREN, ROUNDS);
+  printf("D03: separate files, %d children, %d rounds\n", CHILDREN, ROUNDS);
 
   for (i = 0; i < CHILDREN; i++) {
     if (create_test_file(names[i], 31 + i * 37) < 0) {
